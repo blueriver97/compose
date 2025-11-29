@@ -1,0 +1,4 @@
+faker
+numpy
+pyodbc
+mysql-connector-python

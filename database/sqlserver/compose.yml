@@ -1,0 +1,19 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_SA_PASSWORD: __SA_PASSWORD__
+      TZ: "Asia/Seoul"
+    networks:
+      - default
+    ports:
+      - 1433:1433
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
