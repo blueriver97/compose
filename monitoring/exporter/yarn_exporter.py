@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, UTC
 from wsgiref.simple_server import make_server
 import urllib.parse
 import argparse
@@ -63,7 +63,7 @@ class YarnCollector(object):
         return urllib.parse.urljoin(self.endpoint, self.api_path)
 
     def collect(self):
-        raise NotImplemented
+        raise Exception('Not implemented')
 
 
 class YarnClusterInfoCollector(YarnCollector):
@@ -217,7 +217,7 @@ class YarnApplicationCollector(YarnCollector):
 
     @property
     def search_time_range(self):
-        today = datetime.utcnow().date()
+        today = datetime.now(UTC).date()
         today_beginning = datetime.combine(today, time.min)
         today_ending = datetime.combine(today, time.max)
         return datetime_to_epoch_ms(today_beginning - self.time_buffer), datetime_to_epoch_ms(
