@@ -1,0 +1,41 @@
+# 운영 체제 파일
+Thumbs.db
+Desktop.ini
+**/.DS_Store
+.DS_Store
+
+# Node.js 관련 파일
+node_modules/
+package-lock.json
+
+# Python 관련 파일
+*.pyc
+*.pyo
+__pycache__/
+
+# Java 관련 파일
+*.class
+*.jar
+*.war
+*.ear
+target/
+*.iml
+
+# JavaScript/TypeScript 관련 파일
+dist/
+coverage/
+*.log
+
+# IDE 및 편집기 관련 파일
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# macOS에서 자동 생성되는 파일들
+.AppleDouble/
+.LSOverride
+
+# Linux 시스템에서 생성되는 파일들
+*~
+*.swp
