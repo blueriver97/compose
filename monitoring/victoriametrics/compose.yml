@@ -1,0 +1,36 @@
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:latest
+    container_name: victoriametrics
+    restart: always
+    user: root
+    environment:
+      VM_STORAGE_PATH: /victoriametrics-data
+      VM_HTTP_LISTEN_ADDR: ":8428"
+      VM_RETENTION_PERIOD: 3 # 데이터 보관 기간: 12개월
+      VM_MAX_CONCURRENT_QUERIES: 20 # 동시 쿼리 제한
+      VM_MAX_OPEN_FILES: 200000 # OS 파일 디스크립터 제한
+      VM_LOG_LEVEL: info # 로그 레벨
+      VM_DISABLE_WARNINGS: "true" # 경고 메시지 최소화
+    networks:
+      - default
+    ports:
+      - 8428:8428
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - victoriametrics-data:/victoriametrics-data # 영속적 데이터 저장
+      - ./logs:/victoriametrics-logs # 로그 저장
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
+
+volumes:
+  victoriametrics-data:
+  # driver: local
+  # driver_opts:
+  #   type: none
+  #   o: bind
+  #   device: '/data/volumes/prometheus's

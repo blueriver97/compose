@@ -1,0 +1,36 @@
+services:
+  graphite-exporter:
+    image: prom/graphite-exporter
+    container_name: graphite-exporter
+    restart: always
+    networks:
+      - default
+    ports:
+      - 9108:9108
+      - 9109:9109
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./graphite_mapping.conf:/tmp/graphite_mapping.conf
+
+  yarn-exporter:
+    image: python:3.11-slim-bookworm
+    container_name: yarn-exporter
+    user: root
+    restart: always
+    entrypoint: >
+      /bin/bash -c "
+      pip install -U pip setuptools wheel prometheus-client attrs requests;
+      python3 /root/yarn_exporter.py http://localhost:8088
+      "
+    networks:
+      - default
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./yarn_exporter.py:/root/yarn_exporter.py
+
+networks:
+  default:
+    driver: bridge
+    name: service-network

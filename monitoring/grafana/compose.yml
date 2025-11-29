@@ -1,0 +1,26 @@
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: always
+    networks:
+      - default
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - grafana-config:/etc/grafana
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
+
+volumes:
+  grafana-data:
+  grafana-config:
+  # driver: local
+  # driver_opts:
+  #   type: none
+  #   o: bind
+  #   device: '/data/volumes/prometheus's
