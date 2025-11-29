@@ -1,0 +1,22 @@
+services:
+  amazonlinux:
+    build:
+      dockerfile: base/amazonlinux/Dockerfile
+      context: ../../
+      platforms:
+        - linux/amd64
+        - linux/arm64/v8
+    image: blueriver97/amazonlinux:2023
+    container_name: amazonlinux
+    stdin_open: true
+    tty: true
+    restart: always
+    networks:
+      - default
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+networks:
+  default:
+    driver: bridge
+    name: service-network

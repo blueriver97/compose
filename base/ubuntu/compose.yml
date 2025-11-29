@@ -1,0 +1,22 @@
+services:
+  ubuntu:
+    build:
+      dockerfile: base/ubuntu/Dockerfile
+      context: ../../
+      platforms:
+        - linux/amd64
+        - linux/arm64/v8
+    image: blueriver97/ubuntu:24.04
+    container_name: ubuntu
+    stdin_open: true
+    tty: true
+    restart: always
+    networks:
+      - default
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
