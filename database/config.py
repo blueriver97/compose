@@ -25,6 +25,7 @@ class GenerateConfig(BaseModel):
     insert_rate: float
     update_rate: float
     delete_rate: float
+    seed: int
 
 
 class YamlConfigSettingsSource(PydanticBaseSettingsSource):

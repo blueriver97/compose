@@ -12,6 +12,7 @@ generate:
   insert_rate: 0.60 # insert rate
   update_rate: 0.30 # update rate
   delete_rate: 0.10 # delete rate
+  seed: 42
 
 tables:
   - "tb_lower"

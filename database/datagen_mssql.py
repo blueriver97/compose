@@ -53,7 +53,7 @@ class SQLServerDataGenerator:
         self.conn: Optional[Connection] = None
 
         # random.Generator
-        self.rng = np.random.default_rng()
+        self.rng = np.random.default_rng(self.config.generate.seed)
 
         # 타입별 데이터 생성 전략 매핑
         self.type_generators: dict[str, callable] = {
