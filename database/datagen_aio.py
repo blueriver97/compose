@@ -69,6 +69,9 @@ class AsyncMySQLDataGenerator:
         # DB 연결 설정
         self.pool: Optional[aiomysql.Pool] = None
 
+        # random.Generator
+        self.rng = np.random.default_rng()
+
         # 타입별 데이터 생성 전략 매핑
         self.type_generators: Dict[str, Callable] = {
             "int": self._gen_int,
@@ -241,7 +244,7 @@ class AsyncMySQLDataGenerator:
             start_time = time.time()
 
             # TPS 만큼 동작 결정
-            batch_actions = np.random.choice(actions, size=tps, p=probs)
+            batch_actions = self.rng.choice(actions, size=tps, p=probs)
             logger.info(f"Batch actions: {batch_actions.tolist()}")
 
             # Connection Pool에서 커넥션 획득
@@ -265,7 +268,7 @@ class AsyncMySQLDataGenerator:
             # TPS 유지를 위한 Sleep
             elapsed = time.time() - start_time
             sleep_time = max(1.0 - elapsed, 0)
-            time.sleep(sleep_time)
+            await asyncio.sleep(sleep_time)
 
 
 async def main():

@@ -30,7 +30,7 @@ class TableSchema:
             col_length = col[2]
             col_nullable = col[3]
             col_key = col[4]
-            col_default = col[5]
+            # col_default = col[5]
             col_auto = col[6]
 
             self.columns_info[col_name] = {
@@ -51,6 +51,9 @@ class SQLServerDataGenerator:
         self.fake = Faker()
         self.db_config = self.config.database
         self.conn: Optional[Connection] = None
+
+        # random.Generator
+        self.rng = np.random.default_rng()
 
         # 타입별 데이터 생성 전략 매핑
         self.type_generators: dict[str, callable] = {
@@ -234,7 +237,7 @@ class SQLServerDataGenerator:
             start_time = time.time()
 
             # TPS 만큼 동작 결정
-            batch_actions = np.random.choice(actions, size=tps, p=probs)
+            batch_actions = self.rng.choice(actions, size=tps, p=probs)
             logger.info(f"Batch actions: {batch_actions.tolist()}")
 
             with self.get_cursor() as cursor:

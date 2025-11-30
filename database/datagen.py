@@ -70,6 +70,9 @@ class MySQLDataGenerator:
         self.db_config = self.config.database
         self.conn: Optional[MySQLConnection] = None
 
+        # random.Generator
+        self.rng = np.random.default_rng()
+
         # 타입별 데이터 생성 전략 매핑
         self.type_generators: Dict[str, Callable] = {
             "int": self._gen_int,
@@ -238,7 +241,7 @@ class MySQLDataGenerator:
             start_time = time.time()
 
             # TPS 만큼 동작 결정
-            batch_actions = np.random.choice(actions, size=tps, p=probs)
+            batch_actions = self.rng.choice(actions, size=tps, p=probs)
             logger.info(f"Batch actions: {batch_actions.tolist()}")
 
             with self.get_cursor() as cursor:
