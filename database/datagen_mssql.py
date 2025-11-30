@@ -1,46 +1,263 @@
 import random
 import time
 import pyodbc
+from pyodbc import Cursor, Connection
 import numpy as np
 from faker import Faker
-from tqdm import tqdm
+import logging
+from contextlib import contextmanager
+from config import DatagenConfig
+from typing import Any, Optional
 
-# TODO. MSSQL 연결 정보
-DB_HOST = "localhost"
-DB_PORT = 1433
-DB_USER = "SA"
-DB_PASSWORD = "foqaktmxj01!"
-DEFAULT_DATABASE = "store"
-
-# TODO. 트랜잭션 설정
-TRANSACTIONS_PER_SECOND = 20
-TOTAL_DURATION_SECONDS = 1
-INSERT_RATIO = 0.60
-UPDATE_RATIO = 0.30
-DELETE_RATIO = 0.10
-
-# TODO. 테이블 목록
-# 공백을 제거해 주는 strip() 로 정리
-TABLE_LIST = [t.strip() for t in """store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY""".split(",")]
-
-# pyodbc 연결 설정
-conn_str = (
-    f"DRIVER={{ODBC Driver 18 for SQL Server}};"
-    f"SERVER={DB_HOST},{DB_PORT};"
-    f"DATABASE={DEFAULT_DATABASE};"
-    f"UID={DB_USER};PWD={DB_PASSWORD};"
-    f"Encrypt=no;TrustServerCertificate=yes"
+# 로깅 설정
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
-db = pyodbc.connect(conn_str)
-cursor = db.cursor()
-
-fake = Faker()
+logger = logging.getLogger(__name__)
 
 
-def get_table_schema(table):
-    schema_name, table_name = table.split(".")
-    cursor.execute(
-        f"""
+class TableSchema:
+    def __init__(self, table_name: str, columns: list[tuple]):
+        self.table_name = table_name
+        self.columns_info: dict[str, dict[str, Any]] = {}
+        self.primary_keys: list[str] = []
+        self.auto_increments: list[str] = []
+
+        for col in columns:
+            col_name = col[0]
+            col_type = col[1]
+            col_length = col[2]
+            col_nullable = col[3]
+            col_key = col[4]
+            col_default = col[5]
+            col_auto = col[6]
+
+            self.columns_info[col_name] = {
+                "type_name": col_type,
+                "type_length": col_length,
+                "is_nullable": col_nullable == "YES"
+            }
+
+            if col_key == "YES":
+                self.primary_keys.append(col_name)
+            if col_auto == "YES":
+                self.auto_increments.append(col_name)
+
+
+class SQLServerDataGenerator:
+    def __init__(self, config: DatagenConfig):
+        self.config = config
+        self.fake = Faker()
+        self.db_config = self.config.database
+        self.conn: Optional[Connection] = None
+
+        # 타입별 데이터 생성 전략 매핑
+        self.type_generators: dict[str, callable] = {
+            "int": self._gen_int,
+            "tinyint": self._gen_tinyint,
+            "bigint": self._gen_bigint,
+            "varchar": self._gen_string,
+            "char": self._gen_string,
+            "text": self._gen_string,
+            "date": lambda length, **kwargs: self.fake.date_this_decade(),
+            "time": lambda length, **kwargs: self.fake.time(),
+            "datetime": lambda length, **kwargs: self.fake.date_time_this_decade(),
+            "datetime2": lambda length, **kwargs: self.fake.date_time_this_decade(),
+            "timestamp": lambda length, **kwargs: self.fake.date_time_this_decade(),
+            "float": self._gen_float,
+            "double": self._gen_double,
+            "decimal": self._gen_decimal,
+            "blob": self._gen_blob,
+            "longblob": self._gen_blob,
+            "mediumblob": self._gen_blob,
+            "tinyblob": self._gen_blob,
+            "varbinary": self._gen_blob,
+            "binary": self._gen_blob,
+            "image": self._gen_blob,
+            "bit": self._gen_boolean,
+        }
+
+    @contextmanager
+    def get_cursor(self):
+        """DB 커서 컨텍스트 매니저 (재연결 로직 포함)"""
+        try:
+            if self.conn is None or self.conn.closed:
+                conn_str = (
+                    f"DRIVER={{ODBC Driver 18 for SQL Server}};"
+                    f"SERVER={self.db_config.host},{self.db_config.port};"
+                    f"DATABASE={self.db_config.database};"
+                    f"UID={self.db_config.user};PWD={self.db_config.password};"
+                    f"Encrypt=no;TrustServerCertificate=yes"
+                )
+                self.conn = pyodbc.connect(conn_str)
+            cursor = self.conn.cursor()
+            yield cursor
+        except pyodbc.Error as err:
+            logger.error(f"Database connection error: {err}")
+            if self.conn:
+                self.conn.rollback()
+            raise
+        finally:
+            if cursor:
+                cursor.close()
+
+    def close(self):
+        if self.conn and not self.conn.closed:
+            self.conn.close()
+            logger.info("Database connection closed")
+
+    def _gen_boolean(self, length: str, **kwargs) -> bool:
+        return self.fake.boolean()
+
+    def _gen_int(self, length: str, **kwargs) -> int:
+        return self.fake.random_int(min=0, max=2147483647)
+
+    def _gen_tinyint(self, length: str, **kwargs) -> int:
+        return random.choice([0, 1]) if length == "1" else self.fake.random_int(0, 127)
+
+    def _gen_bigint(self, length: str, **kwargs) -> int:
+        return self.fake.random_int(min=0, max=9223372036854775807)
+
+    def _gen_string(self, length: str, **kwargs) -> str:
+        max_chars = int(length) if length else 255
+        max_chars = 65535 if max_chars < 0 else max_chars
+        return self.fake.text(max_nb_chars=min(max_chars, 1000))
+
+    def _gen_float(self, length: str, **kwargs) -> float:
+        return self.fake.pyfloat(left_digits=4, right_digits=2, positive=True)
+
+    def _gen_double(self, length: str, **kwargs) -> float:
+        return self.fake.pyfloat(left_digits=6, right_digits=3, positive=True)
+
+    def _gen_decimal(self, length: str, **kwargs) -> Any:
+        prec, scale = (5, 2)
+        if length and "," in length:
+            parts = length.split(",")
+            prec, scale = int(parts[0]), int(parts[1])
+        return self.fake.pydecimal(left_digits=prec - scale, right_digits=scale, positive=True)
+
+    def _gen_blob(self, length: str, type_name: str = "blob") -> bytes:
+        size_map = {"tinyblob": 255, "blob": 65535, "mediumblob": 16777215}
+        limit = min(size_map.get(type_name, 65535), 1024)
+        return self.fake.binary(length=limit)
+
+    def _generate_row_data(self, schema: TableSchema) -> dict[str, Any]:
+        """스키마에 맞는 랜덤 데이터 생성"""
+        data = {}
+        for col_name, info in schema.columns_info.items():
+            if col_name in schema.auto_increments:
+                continue
+
+            # Nullable 컬럼에 대해 10% 확률로 NULL 처리
+            if info["is_nullable"] and random.random() < 0.1:
+                data[col_name] = None
+                continue
+
+            generator = self.type_generators.get(info["type_name"])
+            if generator:
+                data[col_name] = generator(info["type_length"], type_name=info["type_name"])
+            else:
+                data[col_name] = self.fake.text(max_nb_chars=50)
+        return data
+
+    def insert_data(self, cursor: Cursor, schema: TableSchema):
+        data = self._generate_row_data(schema)
+        columns = list(data.keys())
+        values = list(data.values())
+        placeholders = ", ".join(['?'] * len(columns))
+        col_names = ", ".join(columns)
+        sql = f"INSERT INTO dbo.{schema.table_name} ({col_names}) VALUES ({placeholders});"
+        cursor.execute(sql, values)
+
+    def update_data(self, cursor: Cursor, schema: TableSchema):
+        if not schema.primary_keys:
+            return
+
+        pk_select = ", ".join(schema.primary_keys)
+        cursor.execute(f"SELECT TOP 1 {pk_select} FROM dbo.{schema.table_name} ORDER BY NEWID();")
+        row = cursor.fetchone()
+
+        if row:
+            data = self._generate_row_data(schema)
+            update_data = {
+                k: v for k, v in data.items()
+                if k not in schema.primary_keys and k not in schema.auto_increments
+            }
+            if not update_data:
+                return
+
+            set_clause = ", ".join([f"{k}=?" for k in update_data.keys()])
+            where_clause = " AND ".join([f"{k}=?" for k in schema.primary_keys])
+
+            sql = f"UPDATE dbo.{schema.table_name} SET {set_clause} WHERE {where_clause};"
+            cursor.execute(sql, list(update_data.values()) + list(row))
+
+    def delete_data(self, cursor: Cursor, schema: TableSchema):
+        if not schema.primary_keys:
+            return
+
+        pk_select = ", ".join(schema.primary_keys)
+        cursor.execute(f"SELECT TOP 1 {pk_select} FROM dbo.{schema.table_name} ORDER BY NEWID();")
+        row = cursor.fetchone()
+
+        if row:
+            where_clause = " AND ".join([f"{k}=?" for k in schema.primary_keys])
+            sql = f"DELETE FROM dbo.{schema.table_name} WHERE {where_clause};"
+            cursor.execute(sql, row)
+
+    def process_table(self, table_name: str):
+        logger.info(f"Processing table {table_name}")
+
+        with self.get_cursor() as cursor:
+            cursor.execute(self.schema_statement(table_name))
+            result = cursor.fetchall()
+            schema = TableSchema(table_name, result)
+
+        gen_config = self.config.generate
+        total_duration = gen_config.duration
+        tps = gen_config.transactions
+
+        # 확률 정규화 (합이 1이 되도록 조정)
+        raw_probs = [gen_config.insert_rate, gen_config.update_rate, gen_config.delete_rate]
+        total_rate = sum(raw_probs)
+        if total_rate == 0:
+            probs = [1.0, 0.0, 0.0]  # 기본값: Insert Only
+        else:
+            probs = [r / total_rate for r in raw_probs]
+
+        actions = ["I", "U", "D"]
+        logger.info(
+            f"Workload distribution for {table_name}: I={probs[0]:.2f}, U={probs[1]:.2f}, D={probs[2]:.2f}")
+
+        for _ in range(total_duration):
+            start_time = time.time()
+
+            # TPS 만큼 동작 결정
+            batch_actions = np.random.choice(actions, size=tps, p=probs)
+            logger.info(f"Batch actions: {batch_actions.tolist()}")
+
+            with self.get_cursor() as cursor:
+                try:
+                    for action in batch_actions:
+                        if action == "I":
+                            self.insert_data(cursor, schema)
+                        elif action == "U":
+                            self.update_data(cursor, schema)
+                        elif action == "D":
+                            self.delete_data(cursor, schema)
+                    self.conn.commit()
+                except Exception as e:
+                    logger.error(f"Transaction batch failed: {e}")
+                    self.conn.rollback()
+
+            # TPS 유지를 위한 Sleep
+            elapsed = time.time() - start_time
+            sleep_time = max(1.0 - elapsed, 0)
+            time.sleep(sleep_time)
+
+    def schema_statement(self, table_name: str):
+        stmt = f"""
         WITH
 /*테이블 명세서*/
     TBL_SPEC       AS (SELECT SYS_TBLS.object_id /*테이블 ID*/
@@ -89,7 +306,6 @@ SELECT TBL_SPEC.COLUMN_NAME                                           AS COLUMN_
      , TBL_SPEC.COLUMN_DEFAULT                                        AS COLUMN_DEFAULT /*컬럼의 기본값*/
      , IIF(IS_IDENTITY.COLUMN_NAME IS NOT NULL, 'YES', 'NO')          AS IS_AUTO_INCREMENT /*AUTO_INCREMENT 여부*/
 
-
 -- SELECT COUNT(1)
 FROM TBL_SPEC
          LEFT JOIN KEY_COLS
@@ -98,267 +314,28 @@ FROM TBL_SPEC
          LEFT JOIN IS_IDENTITY
                    ON TBL_SPEC.TABLE_NAME = IS_IDENTITY.TABLE_NAME
                        AND TBL_SPEC.COLUMN_NAME = IS_IDENTITY.COLUMN_NAME
-WHERE TBL_SPEC.TABLE_NAME = ?
+WHERE TBL_SPEC.TABLE_NAME = '{table_name}'
 ORDER BY TBL_SPEC.TABLE_NAME, TBL_SPEC.ORDINAL_POSITION;
-        """,
-        (table_name,),
-    )
-    return {row.COLUMN_NAME: row for row in cursor.fetchall()}
+        """
+        return stmt
 
 
-# Primary Key 컬럼 찾기 함수
-def get_primary_key_columns(columns):
-    return [column[0] for column in columns if column[4] == "YES"]
+if __name__ == '__main__':
+    try:
+        config = DatagenConfig()
+    except Exception as e:
+        logger.error(f"Failed to load configuration: {e}")
+        exit(1)
 
+    generator = SQLServerDataGenerator(config)
 
-# Auto Increment 키 컬럼 찾기 함수
-def get_auto_increment_columns(columns):
-    return [column[0] for column in columns if column[6] == "YES"]
+    try:
+        for table in config.tables:
+            generator.process_table(table)
 
-
-def generate_integer_value(type_name, type_length):
-    if "bigint" in type_name:
-        return fake.random_int(min=0, max=9223372036854775807)
-    elif "tinyint" in type_name and type_length == "1":
-        return random.choice([0, 1])
-    else:
-        return fake.random_int(min=0, max=2147483647)
-
-
-def generate_string_value(type_name, type_length):
-    max_length = int(type_length) if type_length else 255
-    if max_length < 0:
-        max_length = 255
-    if "varchar" in type_name or "text" in type_name or "char" in type_name:
-        return fake.text(max_nb_chars=max_length)
-    else:
-        return fake.uuid4()
-
-
-def generate_date_time_value(type_name):
-    if "date" in type_name:
-        return fake.date_this_decade()
-    elif "time" in type_name:
-        return fake.time()
-    elif "datetime" in type_name or "timestamp" in type_name:
-        return fake.date_time_this_decade()
-    else:
-        return None
-
-
-def generate_numeric_value(type_name, type_length):
-    if "float" in type_name:
-        return fake.pyfloat(left_digits=4, right_digits=2, positive=True)
-    elif "double" in type_name:
-        return fake.pyfloat(left_digits=6, right_digits=3, positive=True)
-    elif "decimal" in type_name:
-        precision = int(type_length.split(",")[0]) if type_length else 5
-        scale = (
-            int(type_length.split(",")[1]) if type_length and "," in type_length else 2
-        )
-        return fake.pydecimal(
-            left_digits=precision - scale, right_digits=scale, positive=True
-        )
-    else:
-        return None
-
-
-def generate_blob_value(type_name, type_length):
-    # 타입 이름을 소문자로 변환하여 대소문자 구분 없이 비교 가능하도록 함
-    type_name = type_name.lower()
-
-    # 기본 BLOB 타입의 길이를 지정 (예: 65,536 bytes = 64 KB)
-    if type_length is None:
-        if "tinyblob" in type_name:
-            type_length = 255  # TINYBLOB 최대 크기
-        elif "blob" in type_name:
-            type_length = 65535  # BLOB 최대 크기
-        elif "mediumblob" in type_name:
-            type_length = 16777215  # MEDIUMBLOB 최대 크기
-        elif "longblob" in type_name:
-            type_length = 4294967295  # LONGBLOB 최대 크기
-        else:
-            type_length = 65535  # 기본 BLOB 길이 (64 KB)
-    else:
-        if type_length == "-1":
-            type_length = 65535
-    return fake.binary(length=type_length)
-
-
-def generate_boolean_value():
-    return fake.boolean()
-
-
-# 데이터 생성 함수
-def generate_data(columns_dict, primary_key_columns, auto_increment_columns):
-    data = {}
-    for column_name, column_info in columns_dict.items():
-        type_name = column_info[1].lower()
-        type_length = column_info[2]
-        column_default = column_info[5]
-
-        if column_default is not None or column_name in auto_increment_columns:
-            continue
-
-        if (
-                column_name in primary_key_columns
-                and column_name not in auto_increment_columns
-        ):
-            if "int" in type_name:
-                data[column_name] = generate_integer_value(type_name, type_length)
-            elif ("date" in type_name
-                  or "time" in type_name
-                  or "datetime" in type_name
-                  or "datetime2" in type_name):
-                data[column_name] = generate_date_time_value(type_name)
-            elif ("float" in type_name
-                  or "double" in type_name
-                  or "decimal" in type_name):
-                data[column_name] = generate_numeric_value(type_name, type_length)
-            else:
-                data[column_name] = generate_string_value(type_name, type_length)
-        else:
-            if random.random() < 0.1:
-                data[column_name] = None
-            else:
-                if "int" in type_name:
-                    data[column_name] = generate_integer_value(type_name, type_length)
-                elif (
-                        "varchar" in type_name
-                        or "text" in type_name
-                        or "char" in type_name
-                ):
-                    data[column_name] = generate_string_value(type_name, type_length)
-                elif (
-                        "date" in type_name
-                        or "time" in type_name
-                        or "datetime" in type_name
-                        or "datetime2" in type_name
-                ):
-                    data[column_name] = generate_date_time_value(type_name)
-                elif (
-                        "float" in type_name
-                        or "double" in type_name
-                        or "decimal" in type_name
-                ):
-                    data[column_name] = generate_numeric_value(type_name, type_length)
-                elif "blob" in type_name or "binary" in type_name:
-                    data[column_name] = generate_blob_value(type_name, type_length)
-                elif "bit" in type_name:
-                    data[column_name] = generate_boolean_value()
-    return data
-
-
-# 데이터 삽입 함수
-def insert_data(table_name, columns_dict, primary_key_columns, auto_increment_columns):
-    data = generate_data(columns_dict, primary_key_columns, auto_increment_columns)
-    insert_columns = [col for col in data.keys() if col not in auto_increment_columns]
-    insert_values = [data[col] for col in insert_columns]
-    schema, table = table_name.split(".")
-    sql = f"INSERT INTO {schema}.dbo.{table} ({', '.join(insert_columns)}) VALUES ({', '.join(['?'] * len(insert_columns))})"
-    cursor.execute(sql, insert_values)
-    db.commit()
-
-
-# 데이터 갱신 함수
-def update_data(table_name, columns_dict, primary_key_columns, auto_increment_columns):
-    schema, table = table_name.split(".")
-
-    cursor.execute(
-        f"SELECT TOP 1 {', '.join(primary_key_columns)} FROM {schema}.dbo.{table} ORDER BY NEWID()"
-    )
-    row = cursor.fetchone()
-    if row:
-        data = generate_data(columns_dict, primary_key_columns, auto_increment_columns)
-        update_values = {k: v for k, v in data.items() if k not in primary_key_columns}
-        update_values = {k: v for k, v in update_values.items() if k not in auto_increment_columns}
-        set_clause = ", ".join([f"{key}=?" for key in update_values.keys()])
-        where_conditions = {key: row[idx] for idx, key in enumerate(primary_key_columns)}
-        where_clause = " AND ".join([f"{key}=?" for key in where_conditions.keys()])
-
-        sql = f"UPDATE {schema}.dbo.{table} SET {set_clause} WHERE {where_clause}"
-        cursor.execute(
-            sql, list(update_values.values()) + list(where_conditions.values())
-        )
-        db.commit()
-
-
-# 데이터 삭제 함수
-def delete_data(table_name, primary_key_columns):
-    schema, table = table_name.split(".")
-    cursor.execute(
-        f"SELECT TOP 1 {', '.join(primary_key_columns)} FROM {schema}.dbo.{table} ORDER BY RAND()"
-    )
-    row = cursor.fetchone()
-    if row:
-        where_clause = " AND ".join([f"{key}=?" for key in primary_key_columns])
-        sql = f"DELETE FROM {schema}.dbo.{table} WHERE {where_clause}"
-        cursor.execute(sql, row)
-        db.commit()
-
-
-def perform_transactions(
-        table_name,
-        num_transactions,
-        insert_ratio,
-        update_ratio,
-        delete_ratio,
-        columns_dict,
-        primary_key_columns,
-        auto_increment_columns,
-):
-    transactions = np.random.choice(
-        ["i", "u", "d"],
-        size=num_transactions,
-        p=[insert_ratio, update_ratio, delete_ratio],
-    )
-    for action in transactions:
-        if action == "i":
-            insert_data(table_name, columns_dict, primary_key_columns, auto_increment_columns)
-        elif action == "u":
-            update_data(table_name, columns_dict, primary_key_columns, auto_increment_columns)
-        elif action == "d":
-            delete_data(table_name, primary_key_columns)
-    print([str(i) for i in transactions])
-
-
-def schedule_transactions(
-        table_name,
-        transactions_per_second,
-        total_duration_seconds,
-        insert_ratio,
-        update_ratio,
-        delete_ratio,
-):
-    columns_dict = get_table_schema(table_name)
-    primary_key_columns = get_primary_key_columns(columns_dict.values())
-    auto_increment_columns = get_auto_increment_columns(columns_dict.values())
-
-    for _ in tqdm(range(total_duration_seconds), desc="Processing duration"):
-        start_time = time.time()
-        perform_transactions(
-            table_name,
-            transactions_per_second,
-            insert_ratio,
-            update_ratio,
-            delete_ratio,
-            columns_dict,
-            primary_key_columns,
-            auto_increment_columns,
-        )
-        time_taken = time.time() - start_time
-        time.sleep(max(1 - time_taken, 0))
-
-
-for table_name in TABLE_LIST:
-    schedule_transactions(
-        table_name,
-        TRANSACTIONS_PER_SECOND,
-        TOTAL_DURATION_SECONDS,
-        INSERT_RATIO,
-        UPDATE_RATIO,
-        DELETE_RATIO,
-    )
-
-# 연결 종료
-db.close()
+    except KeyboardInterrupt:
+        logger.info("Stopping data generation...")
+    except Exception as e:
+        logger.error(f"Unexpected fatal error: {e}")
+    finally:
+        generator.close()

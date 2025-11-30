@@ -1,310 +1,282 @@
-import random
 import time
+import logging
+import random
+import re
+from typing import Dict, List, Any, Optional, Tuple, Callable
+from contextlib import contextmanager
 
 import mysql.connector
+from mysql.connector import MySQLConnection
+from mysql.connector.cursor import MySQLCursor
 import numpy as np
 from faker import Faker
-from tqdm import tqdm
 
-# TODO. MySQL 연결 정보
-DB_HOST = "localhost"
-DB_PORT = 3306
-DB_USER = "admin"
-DB_PASSWORD = "admin"
-DEFAULT_DATABASE = "store"
+from config import DatagenConfig
 
-# TODO. 데이터 생성 수 및 비율
-TRANSACTIONS_PER_SECOND = 20  # 초당 트랜잭션 수
-TOTAL_DURATION_SECONDS = 1  # 총 실행 시간 (초)
-INSERT_RATIO = 0.60  # 삽입 비율
-UPDATE_RATIO = 0.30  # 갱신 비율
-DELETE_RATIO = 0.10  # 삭제 비율
-
-# TODO. 테이블 목록 (<schema>.<table>)
-TABLE_LIST = """store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY""".split(",")
-
-# MySQL 연결 설정
-db = mysql.connector.connect(
-    host=DB_HOST, port=DB_PORT, user=DB_USER, password=DB_PASSWORD, database=DEFAULT_DATABASE
+# 로깅 설정
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
-cursor = db.cursor()
-
-# Faker 인스턴스 생성
-fake = Faker()
+logger = logging.getLogger(__name__)
 
 
-# 테이블 스키마 가져오기 함수
-def get_table_schema(table_name):
-    cursor.execute(f"DESCRIBE {table_name}")
-    columns = cursor.fetchall()
+class TableSchema:
+    """테이블 스키마 정보를 저장하고 파싱하는 클래스"""
 
-    # 컬럼 정보를 딕셔너리로 변환하여 반환
-    return {column[0]: column for column in columns}
+    def __init__(self, table_name: str, columns: List[Tuple]):
+        self.table_name = table_name
+        self.columns_info: Dict[str, Dict[str, Any]] = {}
+        self.primary_keys: List[str] = []
+        self.auto_increments: List[str] = []
 
+        for col in columns:
+            # MySQL DESCRIBE output format:
+            # Field, Type, Null, Key, Default, Extra
+            col_name = col[0]
+            col_type = col[1]
+            col_nullable = col[2]
+            col_key = col[3]
+            col_extra = col[5]
 
-# Primary Key 컬럼 찾기 함수
-def get_primary_key_columns(columns):
-    return [column[0] for column in columns if column[3] == "PRI"]
+            type_name, type_length = self._parse_type(col_type)
 
+            self.columns_info[col_name] = {
+                "type_name": type_name,
+                "type_length": type_length,
+                "is_nullable": col_nullable == "YES"
+            }
 
-# Auto Increment 키 컬럼 찾기 함수
-def get_auto_increment_columns(columns):
-    return [column[0] for column in columns if "auto_increment" in column[5].lower()]
+            if col_key == "PRI":
+                self.primary_keys.append(col_name)
+            if "auto_increment" in col_extra.lower():
+                self.auto_increments.append(col_name)
 
-
-def parse_type_and_length(column_type):
-    if "(" in column_type and ")" in column_type:
-        start_idx = column_type.find("(")
-        end_idx = column_type.find(")")
-        type_name = column_type[:start_idx]
-        type_length = column_type[start_idx + 1: end_idx]
-    else:
-        type_name = column_type
-        type_length = None
-    return type_name, type_length
-
-
-def generate_integer_value(type_name, type_length):
-    if "bigint" in type_name:
-        return fake.random_int(min=0, max=9223372036854775807)
-    elif "tinyint" in type_name and type_length == "1":
-        return random.choice([0, 1])
-    else:
-        return fake.random_int(min=0, max=2147483647)
-
-
-def generate_string_value(type_name, type_length):
-    max_length = int(type_length) if type_length else 255
-    return (
-        fake.text(max_nb_chars=max_length)
-        if "varchar" in type_name or "text" in type_name or "char" in type_name
-        else fake.uuid4()
-    )
+    def _parse_type(self, column_type: str) -> Tuple[str, Optional[str]]:
+        # e.g., "varchar(255)" -> ("varchar", "255")
+        match = re.match(r"([a-z]+)(?:\((.+)\))?", column_type.lower())
+        if match:
+            return match.group(1), match.group(2)
+        return column_type, None
 
 
-def generate_date_time_value(type_name):
-    if "date" in type_name:
-        return fake.date_this_decade()
-    elif "time" in type_name:
-        return fake.time()
-    elif "datetime" in type_name or "timestamp" in type_name:
-        return fake.date_time_this_decade()
+class MySQLDataGenerator:
+    """MySQL 데이터 생성 및 부하 테스트 실행기"""
 
+    def __init__(self, config: DatagenConfig):
+        self.config = config
+        self.fake = Faker()
+        # DB 연결 설정
+        self.db_config = self.config.database
+        self.conn: Optional[MySQLConnection] = None
 
-def generate_numeric_value(type_name, type_length):
-    if "float" in type_name:
-        return fake.pyfloat(left_digits=4, right_digits=2, positive=True)
-    elif "double" in type_name:
-        return fake.pyfloat(left_digits=6, right_digits=3, positive=True)
-    elif "decimal" in type_name:
-        precision = int(type_length.split(",")[0]) if type_length else 5
-        scale = (
-            int(type_length.split(",")[1]) if type_length and "," in type_length else 2
-        )
-        return fake.pydecimal(
-            left_digits=precision - scale, right_digits=scale, positive=True
-        )
+        # 타입별 데이터 생성 전략 매핑
+        self.type_generators: Dict[str, Callable] = {
+            "int": self._gen_int,
+            "tinyint": self._gen_tinyint,
+            "bigint": self._gen_bigint,
+            "varchar": self._gen_string,
+            "char": self._gen_string,
+            "text": self._gen_string,
+            "date": lambda length, **kwargs: self.fake.date_this_decade(),
+            "time": lambda length, **kwargs: self.fake.time(),
+            "datetime": lambda length, **kwargs: self.fake.date_time_this_decade(),
+            "timestamp": lambda length, **kwargs: self.fake.date_time_this_decade(),
+            "float": self._gen_float,
+            "double": self._gen_double,
+            "decimal": self._gen_decimal,
+            "blob": self._gen_blob,
+            "longblob": self._gen_blob,
+        }
 
+    @contextmanager
+    def get_cursor(self):
+        """DB 커서 컨텍스트 매니저 (재연결 로직 포함)"""
+        try:
+            if self.conn is None or not self.conn.is_connected():
+                self.conn = mysql.connector.connect(**self.db_config.model_dump())
+            cursor = self.conn.cursor()
+            yield cursor
+        except mysql.connector.Error as err:
+            logger.error(f"Database connection error: {err}")
+            if self.conn:
+                self.conn.rollback()
+            raise
+        finally:
+            if cursor:
+                cursor.close()
 
-def generate_blob_value(type_name, type_length):
-    # 타입 이름을 소문자로 변환하여 대소문자 구분 없이 비교 가능하도록 함
-    type_name = type_name.lower()
+    def close(self):
+        """리소스 정리"""
+        if self.conn and self.conn.is_connected():
+            self.conn.close()
+            logger.info("Database connection closed.")
 
-    # 기본 BLOB 타입의 길이를 지정 (예: 65,536 bytes = 64 KB)
-    if type_length is None:
-        if "tinyblob" in type_name:
-            type_length = 255  # TINYBLOB 최대 크기
-        elif "blob" in type_name:
-            type_length = 65535  # BLOB 최대 크기
-        elif "mediumblob" in type_name:
-            type_length = 16777215  # MEDIUMBLOB 최대 크기
-        elif "longblob" in type_name:
-            type_length = 4294967295  # LONGBLOB 최대 크기
-        else:
-            type_length = 65535  # 기본 BLOB 길이 (64 KB)
+    # --- Value Generators ---
+    def _gen_int(self, length: str, **kwargs) -> int:
+        return self.fake.random_int(min=0, max=2147483647)
 
-    return fake.binary(length=type_length)  # 기본적으로 BLOB 크기로 제한
+    def _gen_tinyint(self, length: str, **kwargs) -> int:
+        return random.choice([0, 1]) if length == "1" else self.fake.random_int(0, 127)
 
+    def _gen_bigint(self, length: str, **kwargs) -> int:
+        return self.fake.random_int(min=0, max=9223372036854775807)
 
-# 데이터 생성 함수
-def generate_data(columns_dict, primary_key_columns, auto_increment_columns):
-    data = {}
+    def _gen_string(self, length: str, **kwargs) -> str:
+        max_chars = int(length) if length else 255
+        return self.fake.text(max_nb_chars=min(max_chars, 1000))
 
-    for column_name, column_info in columns_dict.items():
-        column_type = column_info[1].lower()
-        column_default = column_info[4]
+    def _gen_float(self, length: str, **kwargs) -> float:
+        return self.fake.pyfloat(left_digits=4, right_digits=2, positive=True)
 
-        if column_default is not None or column_name in auto_increment_columns:
-            continue
+    def _gen_double(self, length: str, **kwargs) -> float:
+        return self.fake.pyfloat(left_digits=6, right_digits=3, positive=True)
 
-        type_name, type_length = parse_type_and_length(column_type)
+    def _gen_decimal(self, length: str, **kwargs) -> Any:
+        prec, scale = (5, 2)
+        if length and "," in length:
+            parts = length.split(",")
+            prec, scale = int(parts[0]), int(parts[1])
+        return self.fake.pydecimal(left_digits=prec - scale, right_digits=scale, positive=True)
 
-        if (
-                column_name in primary_key_columns
-                and column_name not in auto_increment_columns
-        ):
-            if "int" in type_name:
-                data[column_name] = generate_integer_value(type_name, type_length)
-            elif ("date" in type_name
-                  or "time" in type_name
-                  or "datetime" in type_name
-                  or "timestamp" in type_name):
-                data[column_name] = generate_date_time_value(type_name)
-            elif ("float" in type_name
-                  or "double" in type_name
-                  or "decimal" in type_name):
-                data[column_name] = generate_numeric_value(type_name, type_length)
+    def _gen_blob(self, length: str, type_name: str = "blob") -> bytes:
+        size_map = {"tinyblob": 255, "blob": 65535, "mediumblob": 16777215}
+        limit = min(size_map.get(type_name, 65535), 1024)
+        return self.fake.binary(length=limit)
+
+    def _generate_row_data(self, schema: TableSchema) -> Dict[str, Any]:
+        """스키마에 맞는 랜덤 데이터 생성"""
+        data = {}
+        for col_name, info in schema.columns_info.items():
+            if col_name in schema.auto_increments:
+                continue
+
+            # Nullable 컬럼에 대해 10% 확률로 NULL 처리
+            if info["is_nullable"] and random.random() < 0.1:
+                data[col_name] = None
+                continue
+
+            generator = self.type_generators.get(info["type_name"])
+            if generator:
+                data[col_name] = generator(info["type_length"], type_name=info["type_name"])
             else:
-                data[column_name] = generate_string_value(type_name, type_length)
+                data[col_name] = self.fake.text(max_nb_chars=50)
+        return data
 
+    # --- SQL Operations ---
+    def insert_data(self, cursor: MySQLCursor, schema: TableSchema):
+        data = self._generate_row_data(schema)
+        columns = list(data.keys())
+        values = list(data.values())
+        placeholders = ", ".join(["%s"] * len(columns))
+        col_names = ", ".join(columns)
+
+        sql = f"INSERT INTO {schema.table_name} ({col_names}) VALUES ({placeholders})"
+        cursor.execute(sql, values)
+
+    def update_data(self, cursor: MySQLCursor, schema: TableSchema):
+        if not schema.primary_keys:
+            return
+
+        pk_select = ", ".join(schema.primary_keys)
+        cursor.execute(f"SELECT {pk_select} FROM {schema.table_name} ORDER BY RAND() LIMIT 1")
+        row = cursor.fetchone()
+
+        if row:
+            data = self._generate_row_data(schema)
+            update_data = {
+                k: v for k, v in data.items()
+                if k not in schema.primary_keys and k not in schema.auto_increments
+            }
+            if not update_data:
+                return
+
+            set_clause = ", ".join([f"{k}=%s" for k in update_data.keys()])
+            where_clause = " AND ".join([f"{k}=%s" for k in schema.primary_keys])
+
+            sql = f"UPDATE {schema.table_name} SET {set_clause} WHERE {where_clause}"
+            cursor.execute(sql, list(update_data.values()) + list(row))
+
+    def delete_data(self, cursor: MySQLCursor, schema: TableSchema):
+        if not schema.primary_keys:
+            return
+
+        pk_select = ", ".join(schema.primary_keys)
+        cursor.execute(f"SELECT {pk_select} FROM {schema.table_name} ORDER BY RAND() LIMIT 1")
+        row = cursor.fetchone()
+
+        if row:
+            where_clause = " AND ".join([f"{k}=%s" for k in schema.primary_keys])
+            sql = f"DELETE FROM {schema.table_name} WHERE {where_clause}"
+            cursor.execute(sql, row)
+
+    def process_table(self, table_name: str):
+        logger.info(f"Processing table: {table_name}")
+
+        with self.get_cursor() as cursor:
+            cursor.execute(f"DESCRIBE {table_name}")
+            schema = TableSchema(table_name, cursor.fetchall())
+
+        gen_config = self.config.generate
+        total_duration = gen_config.duration
+        tps = gen_config.transactions
+
+        # 확률 정규화 (합이 1이 되도록 조정)
+        raw_probs = [gen_config.insert_rate, gen_config.update_rate, gen_config.delete_rate]
+        total_rate = sum(raw_probs)
+        if total_rate == 0:
+            probs = [1.0, 0.0, 0.0]  # 기본값: Insert Only
         else:
-            if random.random() < 0.1:  # 10% 확률로 null 값을 할당
-                data[column_name] = None
-            else:
-                if "int" in type_name:
-                    data[column_name] = generate_integer_value(type_name, type_length)
-                elif (
-                        "varchar" in type_name or "text" in type_name or "char" in type_name
-                ):
-                    data[column_name] = generate_string_value(type_name, type_length)
-                elif (
-                        "date" in type_name
-                        or "time" in type_name
-                        or "datetime" in type_name
-                        or "timestamp" in type_name
-                ):
-                    data[column_name] = generate_date_time_value(type_name)
-                elif (
-                        "float" in type_name
-                        or "double" in type_name
-                        or "decimal" in type_name
-                ):
-                    data[column_name] = generate_numeric_value(type_name, type_length)
-                elif "blob" in type_name:
-                    data[column_name] = generate_blob_value(type_name, type_length)
+            probs = [r / total_rate for r in raw_probs]
 
-    return data
+        actions = ["I", "U", "D"]
 
+        logger.info(
+            f"Workload distribution for {table_name}: I={probs[0]:.2f}, U={probs[1]:.2f}, D={probs[2]:.2f}")
 
-# 데이터 삽입 함수
-def insert_data(table_name, columns_dict, primary_key_columns, auto_increment_columns):
-    data = generate_data(columns_dict, primary_key_columns, auto_increment_columns)
-    insert_columns = [col for col in data.keys() if col not in auto_increment_columns]
-    insert_values = [data[col] for col in insert_columns]
-    sql = f"INSERT INTO {table_name} ({', '.join(insert_columns)}) VALUES ({', '.join(['%s'] * len(insert_columns))})"
-    cursor.execute(sql, insert_values)
-    db.commit()
+        for _ in range(total_duration):
+            start_time = time.time()
+
+            # TPS 만큼 동작 결정
+            batch_actions = np.random.choice(actions, size=tps, p=probs)
+            logger.info(f"Batch actions: {batch_actions.tolist()}")
+
+            with self.get_cursor() as cursor:
+                try:
+                    for action in batch_actions:
+                        if action == "I":
+                            self.insert_data(cursor, schema)
+                        elif action == "U":
+                            self.update_data(cursor, schema)
+                        elif action == "D":
+                            self.delete_data(cursor, schema)
+                    self.conn.commit()
+                except Exception as e:
+                    logger.error(f"Transaction batch failed: {e}")
+                    self.conn.rollback()
+
+            # TPS 유지를 위한 Sleep
+            elapsed = time.time() - start_time
+            sleep_time = max(1.0 - elapsed, 0)
+            time.sleep(sleep_time)
 
 
-# 데이터 갱신 함수
-def update_data(table_name, columns_dict, primary_key_columns, auto_increment_columns):
-    cursor.execute(
-        f"SELECT {', '.join(primary_key_columns)} FROM {table_name} ORDER BY RAND() LIMIT 1"
-    )
-    row = cursor.fetchone()
-    if row:
-        data = generate_data(columns_dict, primary_key_columns, auto_increment_columns)
-        update_values = {
-            key: value for key, value in data.items() if key not in primary_key_columns
-        }
-        update_values = {
-            key: value
-            for key, value in update_values.items()
-            if key not in auto_increment_columns
-        }
-        set_clause = ", ".join([f"{key}=%s" for key in update_values.keys()])
-        where_conditions = {
-            key: row[index] for index, key in enumerate(primary_key_columns)
-        }
-        where_clause = " AND ".join([f"{key}=%s" for key in where_conditions.keys()])
-        sql = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause}"
-        cursor.execute(
-            sql, list(update_values.values()) + list(where_conditions.values())
-        )
-        db.commit()
+if __name__ == '__main__':
+    try:
+        config = DatagenConfig()
+    except Exception as e:
+        logger.error(f"Failed to load configuration: {e}")
+        exit(1)
 
+    generator = MySQLDataGenerator(config)
 
-# 데이터 삭제 함수
-def delete_data(table_name, primary_key_columns):
-    cursor.execute(
-        f"SELECT {', '.join(primary_key_columns)} FROM {table_name} ORDER BY RAND() LIMIT 1"
-    )
-    row = cursor.fetchone()
-    if row:
-        where_clause = " AND ".join([f"{key}=%s" for key in primary_key_columns])
-        sql = f"DELETE FROM {table_name} WHERE {where_clause}"
-        cursor.execute(sql, row)
-        db.commit()
+    try:
+        for table in config.tables:
+            generator.process_table(table)
 
-
-# 트랜잭션 발생 함수
-def perform_transactions(
-        table_name,
-        num_transactions,
-        insert_ratio,
-        update_ratio,
-        delete_ratio,
-        columns_dict,
-        primary_key_columns,
-        auto_increment_columns,
-):
-    transactions: np.ndarray = np.random.choice(
-        ["insert", "update", "delete"],
-        size=num_transactions,
-        p=[insert_ratio, update_ratio, delete_ratio],
-    )
-    for _, action in enumerate(transactions):
-        if action == "insert":
-            insert_data(
-                table_name, columns_dict, primary_key_columns, auto_increment_columns
-            )
-        elif action == "update":
-            update_data(
-                table_name, columns_dict, primary_key_columns, auto_increment_columns
-            )
-        elif action == "delete":
-            delete_data(table_name, primary_key_columns)
-    print(f"{[t[0] for t in transactions]}")
-
-
-# 주기적인 트랜잭션 수행 함수
-def schedule_transactions(
-        table_name,
-        transactions_per_second,
-        total_duration_seconds,
-        insert_ratio,
-        update_ratio,
-        delete_ratio,
-):
-    columns_dict = get_table_schema(table_name)
-    primary_key_columns = get_primary_key_columns(columns_dict.values())
-    auto_increment_columns = get_auto_increment_columns(columns_dict.values())
-
-    for _ in tqdm(range(total_duration_seconds), desc="Processing duration"):
-        start_time = time.time()
-        perform_transactions(
-            table_name,
-            transactions_per_second,
-            insert_ratio,
-            update_ratio,
-            delete_ratio,
-            columns_dict,
-            primary_key_columns,
-            auto_increment_columns,
-        )
-        time_taken = time.time() - start_time
-        time.sleep(max(1 - time_taken, 0))
-
-
-for table_name in TABLE_LIST:
-    schedule_transactions(
-        table_name,
-        TRANSACTIONS_PER_SECOND,
-        TOTAL_DURATION_SECONDS,
-        INSERT_RATIO,
-        UPDATE_RATIO,
-        DELETE_RATIO,
-    )
-
-    # 연결 종료
-db.close()
+    except KeyboardInterrupt:
+        logger.info("Stopping data generation...")
+    except Exception as e:
+        logger.error(f"Unexpected fatal error: {e}")
+    finally:
+        generator.close()

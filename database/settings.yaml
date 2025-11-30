@@ -1,0 +1,19 @@
+database:
+  host: "localhost"
+  port: 3306 # 1433
+  user: ""
+  password: ""
+  database: "store"
+  autocommit: false
+
+generate:
+  duration: 1 # duration in seconds
+  transactions: 20 # I,U,D transaction per seconds
+  insert_rate: 0.60 # insert rate
+  update_rate: 0.30 # update rate
+  delete_rate: 0.10 # delete rate
+
+tables:
+  - "tb_lower"
+  - "TB_UPPER"
+  - "TB_COMPOSITE_KEY"
