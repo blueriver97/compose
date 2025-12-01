@@ -2,8 +2,8 @@
 
 SECRET_FILE=".secret"
 
-if [[ -z $VAULT_USER || -z $VAULT_PASSWORD ]]; then
-  echo "No set VAULT_USER or VAULT_PASSWORD"
+if [[ -z "$VAULT_USER" || -z "$VAULT_PASSWORD" ]]; then
+  echo "VAULT_USER or VAULT_PASSWORD is not set"
   exit 1
 fi
 
