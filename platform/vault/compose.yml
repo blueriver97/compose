@@ -1,0 +1,27 @@
+services:
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    restart: always
+    environment:
+      VAULT_ADDR: http://0.0.0.0:8200
+      VAULT_API_ADDR: http://localhost:8200
+      VAULT_UI: true
+    command: vault server -config /vault/config/config.hcl
+    # 컨테이너에 리눅스 커널 권한을 추가
+    cap_add:
+      - IPC_LOCK # 메모리에 있는 민감정보가 스왑되지 않도록 잠금
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - default
+    ports:
+      - 8200:8200
+    volumes:
+      - ./config.hcl:/vault/config/config.hcl
+      - ./policy:/vault/policy
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
