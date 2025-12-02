@@ -1,0 +1,32 @@
+services:
+  nexus:
+    image: sonatype/nexus3:latest
+    container_name: nexus
+    tty: true
+    restart: always
+    networks:
+      - default
+      - intranet
+    ports:
+      - 8081:8081
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  inter-pc:
+    image: blueriver97/ubuntu:24.04
+    #    image: blueriver97/amazonlinux:2023
+    container_name: inter-pc
+    entrypoint: /bin/bash
+    tty: true
+    networks:
+      - intranet
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
+
+  intranet:
+    driver: bridge
+    name: intranet-network
+    internal: true
