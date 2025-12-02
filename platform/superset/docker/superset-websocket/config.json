@@ -1,0 +1,22 @@
+{
+  "port": 8080,
+  "logLevel": "info",
+  "logToFile": false,
+  "logFilename": "app.log",
+  "statsd": {
+    "host": "127.0.0.1",
+    "port": 8125,
+    "globalTags": []
+  },
+  "redis": {
+    "port": 6379,
+    "host": "redis",
+    "password": "",
+    "db": 0,
+    "ssl": false
+  },
+  "redisStreamPrefix": "async-events-",
+  "jwtAlgorithms": ["HS256"],
+  "jwtSecret": "0d9XgAqQjjl2q5SaS2N19pt7pkPr/LqZJ9NgfE6UDNWyyQMP+0yxzTSE",
+  "jwtCookieName": "async-token"
+}

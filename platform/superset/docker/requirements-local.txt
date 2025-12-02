@@ -1,0 +1,7 @@
+pyathena[pandas]
+PyAthenaJDBC
+flask-cors
+Flask-WTF
+python-ldap
+Authlib
+psycopg2
