@@ -95,6 +95,16 @@ docker exec -it nexus cat /nexus-data/admin.password
       - Use certificates stored in the Nexus Repository truststore...: 체크
     - HTTP Client Settings: Auto-block 해제
 
+  - AWS ECR Public
+    - Recipe: docker (proxy) 선택
+    - Name: docker-ecr-public
+    - Remote storage: https://public.ecr.aws
+    - Docker Index: Use proxy registry (no index download) 선택
+    - SSL/TLS Certificate:
+      - [View certificate] 버튼 클릭 → [Add to truststore] 클릭
+      - Use certificates stored in the Nexus Repository truststore...: 체크
+    - HTTP Client Settings: Auto-block 해제
+
 ### Helm Proxy 설정
 
 - 개별 저장소마다 등록 필요
@@ -276,7 +286,11 @@ apt update
 apt install -y docker.io docker-compose
 systemctl start docker
 
-docker pull nginx:latest
+# Docker Hub 이미지 (docker-proxy)
+docker pull nexus:8081/repository/docker-proxy/library/nginx:latest
+
+# ECR Public 이미지 (docker-ecr-public)
+docker pull nexus:8081/repository/docker-ecr-public/amazonlinux/amazonlinux:2023
 ```
 
 ### Helm 설정
