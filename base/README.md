@@ -11,10 +11,11 @@
 
 ## 2. 지원하는 OS (Supported OS)
 
-| OS                | 경로           | Dockerfile                           | 설명                                                 |
-| :---------------- | :------------- | :----------------------------------- | :--------------------------------------------------- |
-| Amazon Linux 2023 | `amazonlinux/` | [Dockerfile](amazonlinux/Dockerfile) | AWS 환경에 최적화된 프로덕션 표준 이미지 (RHEL 계열) |
-| Ubuntu 24.04      | `ubuntu/`      | [Dockerfile](ubuntu/Dockerfile)      | Debian 계열 개발 및 범용 목적 이미지 (LTS)           |
+| OS                | 경로           | Dockerfile                           |
+| :---------------- | :------------- | :----------------------------------- |
+| Amazon Linux 2023 | `amazonlinux/` | [Dockerfile](amazonlinux/Dockerfile) |
+| Rocky Linux 9     | `rockylinux/`  | [Dockerfile](rockylinux/Dockerfile)  |
+| Ubuntu 24.04      | `ubuntu/`      | [Dockerfile](ubuntu/Dockerfile)      |
 
 ## 3. 주요 포함 패키지 (Pre-installed Packages)
 
@@ -34,9 +35,11 @@
 cd amazonlinux
 docker compose up --build -d
 
+# RockyLinux 9 빌드 및 실행
+cd rockylinux
+docker compose up --build -d
+
 # Ubuntu 24.04 빌드 및 실행
 cd ubuntu
 docker compose up --build -d
 ```
-
-s
