@@ -12,11 +12,29 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
 
-  inter-pc:
+  ubuntu:
     image: blueriver97/ubuntu:24.04
-    #    image: blueriver97/amazonlinux:2023
-    container_name: inter-pc
+    container_name: ubuntu
     entrypoint: /bin/bash
+    privileged: true
+    tty: true
+    networks:
+      - intranet
+
+  amazonlinux:
+    image: blueriver97/amazonlinux:2023
+    container_name: amazonlinux
+    entrypoint: /bin/bash
+    privileged: true
+    tty: true
+    networks:
+      - intranet
+
+  rockylinux:
+    image: blueriver97/rockylinux:9
+    container_name: rockylinux
+    entrypoint: /bin/bash
+    privileged: true
     tty: true
     networks:
       - intranet

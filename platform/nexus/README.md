@@ -1,7 +1,33 @@
 # Nexus Repository Manager 3 설정 및 클라이언트 연동 가이드
 
-이 문서는 Docker Compose를 사용하여 Sonatype Nexus 3를 구축하고, 내부망에 격리된 클라이언트(`inter-pc`)가 Nexus를 통해 외부 패키지(APT, PyPI, Docker)를 가져올
+이 문서는 Docker Compose를 사용하여 Sonatype Nexus 3를 구축하고, 내부망에 격리된 클라이언트가 Nexus를 통해 외부 패키지(APT, PyPI, Docker)를 가져올
 수 있도록 설정하는 방법을 설명합니다.
+
+---
+
+<!-- TOC -->
+
+- [Nexus Repository Manager 3 설정 및 클라이언트 연동 가이드](#nexus-repository-manager-3-설정-및-클라이언트-연동-가이드)
+  - [1. 사전 준비 및 실행](#1-사전-준비-및-실행)
+  - [2. Nexus 초기 설정](#2-nexus-초기-설정)
+  - [3. 저장소(Repository) 생성 가이드](#3-저장소repository-생성-가이드)
+    - [APT Proxy 설정](#apt-proxy-설정)
+    - [Yum Proxy 설정](#yum-proxy-설정)
+    - [Amazon Linux 2023 Proxy 설정](#amazon-linux-2023-proxy-설정)
+    - [PyPI (Python) Proxy 설정](#pypi-python-proxy-설정)
+    - [Docker Proxy 설정](#docker-proxy-설정)
+    - [Helm Proxy 설정](#helm-proxy-설정)
+  - [클라이언트 설정](#클라이언트-설정)
+    - [APT 설정](#apt-설정)
+    - [Rocky Linux 9 설정](#rocky-linux-9-설정)
+    - [Amazon Linux 2023 설정](#amazon-linux-2023-설정)
+    - [PyPI 설정 (Python)](#pypi-설정-python)
+    - [Docker 설정](#docker-설정)
+    - [Helm 설정](#helm-설정)
+  - [트러블슈팅](#트러블슈팅) \* [401 Unauthorized](#401-unauthorized)
+  <!-- TOC -->
+
+---
 
 ## 1. 사전 준비 및 실행
 
@@ -10,6 +36,8 @@
 ```bash
 docker-compose up -d
 ```
+
+---
 
 ## 2. Nexus 초기 설정
 
@@ -22,6 +50,8 @@ docker exec -it nexus cat /nexus-data/admin.password
 
 - 브라우저에서 `http://localhost:8081` 접속 후, 로그인(admin/초기 비밀번호)을 하면 비밀번호를 변경합니다.
 - 초기화 과정에서 Anonymous Access를 활성화합니다. (보안을 위해 Disable 권장)
+
+---
 
 ## 3. 저장소(Repository) 생성 가이드
 
@@ -56,6 +86,51 @@ docker exec -it nexus cat /nexus-data/admin.password
       - Use certificates stored in the Nexus Repository truststore...: 체크
     - HTTP Client Settings: Auto-block 해제
 
+### Yum Proxy 설정
+
+- Rocky Linux 9을 완벽하게 지원하려면 최소 3개의 Proxy가 필요합니다.
+- Settings → Repositories → Create repository를 클릭하여 각 저장소를 생성합니다.
+  - Rocky BaseOS Proxy
+    - Recipe: yum (proxy)
+    - Name: rocky-baseos
+    - Remote storage:
+      - (Intel/AMD) Arch: https://dl.rockylinux.org/pub/rocky/9/BaseOS/x86_64/os/
+      - (ARM/Apple Silicon) Arch: https://dl.rockylinux.org/pub/rocky/9/BaseOS/aarch64/os/
+    - SSL/TLS Certificate
+      - [View certificate] 버튼 클릭 → [Add to truststore] 클릭
+      - Use certificates stored in the Nexus Repository truststore...: 체크
+    - HTTP Client Settings: Auto-block 해제
+
+  - Rocky AppStream Proxy
+    - Recipe: yum (proxy)
+    - Name: rocky-appstream
+    - Remote storage:
+      - (Intel/AMD) Arch: https://dl.rockylinux.org/pub/rocky/9/AppStream/x86_64/os/
+      - (ARM/Apple Silicon) Arch: https://dl.rockylinux.org/pub/rocky/9/AppStream/aarch64/os/
+    - SSL/TLS Certificate
+      - [View certificate] 버튼 클릭 → [Add to truststore] 클릭
+      - Use certificates stored in the Nexus Repository truststore...: 체크
+    - HTTP Client Settings: Auto-block 해제
+
+  - EPEL Proxy
+    - Recipe: yum (proxy)
+    - Name: yum-epel
+    - Remote storage:
+      - (Intel/AMD) Arch: https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/
+      - (ARM/Apple Silicon) Arch: https://dl.fedoraproject.org/pub/epel/9/Everything/aarch64/
+    - SSL/TLS Certificate
+      - [View certificate] 버튼 클릭 → [Add to truststore] 클릭
+      - Use certificates stored in the Nexus Repository truststore...: 체크
+    - HTTP Client Settings: Auto-block 해제
+
+  - Group Proxy
+    - Recipe: yum (proxy)
+    - Name: yum-group
+    - Member repositories:
+      - rocky-baseos
+      - rocky-appstream
+      - yum-epel
+
 ### Amazon Linux 2023 Proxy 설정
 
 - AL2023은 EPEL을 지원하지 않으며, 자체 저장소를 사용합니다.
@@ -88,6 +163,9 @@ docker exec -it nexus cat /nexus-data/admin.password
   - Docker Proxy
     - Recipe: docker (proxy) 선택
     - Name: docker-proxy
+    - Repository Connectors: [Path based routing] 클릭 (default)
+    - Allow anonymous docker pull: 체크 (Docker Bearer Token Realm required)
+    - Enable Docker V1 API: 체크
     - Remote storage: https://registry-1.docker.io
     - Docker Index: Use Docker Hub 선택
     - SSL/TLS Certificate:
@@ -105,6 +183,16 @@ docker exec -it nexus cat /nexus-data/admin.password
       - Use certificates stored in the Nexus Repository truststore...: 체크
     - HTTP Client Settings: Auto-block 해제
 
+  - Docker Group
+    - Recipe: docker (group) 선택
+    - Name: docker-group
+    - Allow anonymous docker pull: 체크 (Docker Bearer Token Realm required)
+    - Member repositories:
+      - docker-proxy
+      - docker-ecr-public
+
+- (필수) Settings → Security → Realms를 클릭하여 [Docker Bearer Token Realm] 활성화합니다.
+
 ### Helm Proxy 설정
 
 - 개별 저장소마다 등록 필요
@@ -118,9 +206,11 @@ docker exec -it nexus cat /nexus-data/admin.password
         - Use certificates stored in the Nexus Repository truststore...: 체크
     - HTTP Client Settings: Auto-block 해제
 
+---
+
 ## 클라이언트 설정
 
-### APT 설정 (Ubuntu)
+### APT 설정
 
 - apt-proxy와 apt-security-proxy 두 주소를 모두 바라보도록 설정합니다.
 
@@ -130,16 +220,16 @@ mv /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources
 
 # 새 설정 파일 생성
 cat <<EOF > /etc/apt/sources.list.d/nexus.sources
-# 1. Main Packages (apt-proxy or apt-proxy-arm -> noble)
+# 1. Main Packages
 Types: deb
-URIs: http://nexus:8081/repository/apt-proxy-arm/
+URIs: http://nexus:8081/repository/apt-proxy/
 Suites: noble
 Components: main restricted universe multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
 
-# 2. Security Packages (apt-security-proxy or apt-security-proxy-arm -> noble-security)
+# 2. Security Packages
 Types: deb
-URIs: http://nexus:8081/repository/apt-security-proxy-arm/
+URIs: http://nexus:8081/repository/apt-security-proxy/
 Suites: noble-security
 Components: main restricted universe multiverse
 Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg
@@ -164,6 +254,32 @@ chmod 600 /etc/apt/auth.conf
 ```bash
 apt update
 apt install curl -y
+```
+
+### Rocky Linux 9 설정
+
+-
+
+```bash
+# 기존 Repo 파일 백업 (충돌 방지)
+mkdir -p /etc/yum.repos.d/backup
+mv /etc/yum.repos.d/*.repo /etc/yum.repos.d/backup/
+
+# Nexus Repo 설정 파일 생성
+# BaseOS, AppStream, EPEL 모두 'yum-group' 하나로 해결합니다.
+cat <<EOF > /etc/yum.repos.d/nexus.repo
+[nexus]
+name=Nexus Repository Group
+baseurl=http://nexus:8081/repository/yum-group/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=False
+EOF
+
+# 캐시 정리 및 테스트
+dnf clean all
+dnf repolist
+dnf install htop -y
 ```
 
 ### Amazon Linux 2023 설정
@@ -286,11 +402,15 @@ apt update
 apt install -y docker.io docker-compose
 systemctl start docker
 
-# Docker Hub 이미지 (docker-proxy)
-docker pull nexus:8081/repository/docker-proxy/library/nginx:latest
+# 컨테이너 환경에서 테스트 하는 경우
+dockerd > /var/log/dockerd.log 2>&1 &
 
+# Docker Hub 이미지 (docker-proxy)
+docker pull nexus:8081/docker-proxy/nginx:latest
 # ECR Public 이미지 (docker-ecr-public)
-docker pull nexus:8081/repository/docker-ecr-public/amazonlinux/amazonlinux:2023
+docker pull nexus:8081/docker-ecr-public/amazonlinux:2023
+# Docker Group
+docker pull nexus:8081/docker-group/nginx:latest
 ```
 
 ### Helm 설정
