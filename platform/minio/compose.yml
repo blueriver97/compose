@@ -21,22 +21,24 @@ services:
     volumes:
       - minio_data:/data
 
-  createbuckets:
+  minio_mc:
     image: minio/mc
-    container_name: minio_init
+    container_name: minio_mc
     depends_on:
       minio:
         condition: service_healthy
+    tty: true
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_DEFAULT_BUCKETS: ${MINIO_DEFAULT_BUCKETS}
+      MINIO_ALIAS: ${MINIO_ALIAS}
     entrypoint:
       - /bin/sh
       - -c
       - |
         # 1. MinIO 연결 설정 (alias set)
-        until /usr/bin/mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do
+        until mc alias set $${MINIO_ALIAS} http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do
           echo 'Waiting for MinIO...'
           sleep 1
         done
@@ -47,13 +49,15 @@ services:
           echo "No buckets to create."
         else
           for BUCKET in $(echo $${MINIO_DEFAULT_BUCKETS} | tr ',' ' '); do
-            /usr/bin/mc mb myminio/$$BUCKET --ignore-existing
-            echo "Bucket '$$BUCKET' created (or already exists)."
+            /usr/bin/mc mb $${MINIO_ALIAS}/$${BUCKET} --ignore-existing
+            echo "Bucket $${BUCKET} created (or already exists)."
           done
         fi
 
         echo 'MinIO init complete.'
-        exit 0
+        tail -f /dev/null
+    networks:
+      - default
 
 networks:
   default:
