@@ -176,6 +176,9 @@ docker exec -it nexus cat /nexus-data/admin.password
   - AWS ECR Public
     - Recipe: docker (proxy) 선택
     - Name: docker-ecr-public
+    - Repository Connectors: [Path based routing] 클릭 (default)
+    - Allow anonymous docker pull: 체크 (Docker Bearer Token Realm required)
+    - Enable Docker V1 API: 체크
     - Remote storage: https://public.ecr.aws
     - Docker Index: Use proxy registry (no index download) 선택
     - SSL/TLS Certificate:
