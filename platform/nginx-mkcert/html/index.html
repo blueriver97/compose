@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mkcert HTTPS Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 { margin-bottom: 0.5rem; color: #333; }
+        .icon { font-size: 4rem; margin-bottom: 1rem; display: block; }
+        .message { margin-top: 1.5rem; font-size: 1.1rem; line-height: 1.5; }
+        .secure { color: #2e7d32; }
+        .insecure { color: #d32f2f; }
+        .info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #666;
+            text-align: left;
+        }
+        code { background: #e9ecef; padding: 2px 4px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span id="icon" class="icon">🤔</span>
+        <h1 id="status-title">연결 확인 중...</h1>
+
+        <div id="status-message" class="message">
+            프로토콜 상태를 감지하고 있습니다.
+        </div>
+
+        <div class="info">
+            <p><strong>Server Info:</strong></p>
+            • Domain: <code id="domain">...</code><br>
+            • Protocol: <code id="protocol">...</code>
+        </div>
+    </div>
+
+    <script>
+        const iconEl = document.getElementById('icon');
+        const titleEl = document.getElementById('status-title');
+        const msgEl = document.getElementById('status-message');
+        const domainEl = document.getElementById('domain');
+        const protocolEl = document.getElementById('protocol');
+
+        // 도메인 및 프로토콜 정보 표시
+        domainEl.textContent = window.location.hostname;
+        protocolEl.textContent = window.location.protocol;
+
+        if (location.protocol === 'https:') {
+            // HTTPS 접속 시
+            iconEl.textContent = '🔒';
+            titleEl.textContent = '보안 연결 성공!';
+            titleEl.classList.add('secure');
+            msgEl.innerHTML = 'mkcert 인증서가 정상적으로 작동 중입니다.<br>브라우저 주소창의 자물쇠를 확인하세요.';
+        } else {
+            // HTTP 접속 시
+            iconEl.textContent = '🔓';
+            titleEl.textContent = '주의 요망';
+            titleEl.classList.add('insecure');
+            msgEl.innerHTML = '현재 <b>HTTP</b>로 접속되어 있습니다.<br><a href="https://' + location.host + '">여기</a>를 눌러 HTTPS로 이동하세요.';
+        }
+    </script>
+</body>
+</html>

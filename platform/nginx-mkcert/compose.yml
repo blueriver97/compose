@@ -1,0 +1,19 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: unless-stopped
+    networks:
+      - default
+    volumes:
+      - ./conf.d:/etc/nginx/conf.d
+      - ./cert:/etc/nginx/cert
+      - ./html:/usr/share/nginx/html
+    ports:
+      - 80:80
+      - 443:443
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
