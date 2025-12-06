@@ -1,0 +1,47 @@
+services:
+  git-sync:
+    image: registry.k8s.io/git-sync/git-sync:v4.5.0
+    container_name: git-sync
+    restart: always
+    environment:
+      # 필수: Git 저장소 URL (SSH 또는 HTTPS)
+      GITSYNC_REPO: "git@github.com:blueriver97/datalake-iceberg.git"
+
+      # 필수: 로컬 루트 디렉토리 (여기에 worktree 및 link 생성됨)
+      GITSYNC_ROOT: "/git"
+
+      # 필수: 체크아웃할 ref (브랜치, 태그, 해시)
+      GITSYNC_REF: "main"
+
+      # 주기적 동기화 간격 (운영은 30초~5분 권장)
+      GITSYNC_PERIOD: "30s"
+
+      # 동작 모드: 한번만 동기화 후 종료할지 여부
+      GITSYNC_ONE_TIME: "false"
+
+      # UID 기반 사용자 등록 (SSH 인증 시 필요할 수 있음)
+      GITSYNC_ADD_USER: "true"
+
+      # 얕은 클론: 1이면 최신 커밋만, 0이면 전체 히스토리
+      GITSYNC_DEPTH: "1"
+
+      # 서브모듈 처리: recursive | shallow | off
+      GITSYNC_SUBMODULES: "recursive"
+
+      # symlink 이름 (기본은 repo 이름)
+      GITSYNC_LINK: "datalake-iceberg"
+
+      # SSH Known Hosts 검증 (보안상 반드시 true 유지)
+      GITSYNC_SSH_KNOWN_HOSTS: "true"
+      GITSYNC_SSH_KEY_FILE: "/tmp/.ssh/id_ed25519"
+      GITSYNC_SSH_KNOWN_HOSTS_FILE: "/tmp/.ssh/known_hosts"
+
+      # 로그 레벨 (0=최소, 5=디버깅)
+      GITSYNC_VERBOSE: "1"
+
+    volumes:
+      # Git 동기화된 데이터 저장소 (다른 서비스에서 공유 가능)
+      - ./git-data:/git
+
+      # SSH 키 및 known_hosts 파일 제공
+      - ./ssh:/tmp/.ssh:ro
