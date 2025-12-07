@@ -2,7 +2,7 @@ services:
   # 1. MinIO 서버 (S3 호환 스토리지)
   minio:
     image: quay.io/minio/minio:latest
-    container_name: minio_server
+    container_name: minio-server
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
@@ -11,8 +11,8 @@ services:
     networks:
       - default
     ports:
-      - "${MINIO_API_PORT}:9000" # API 포트 (코드에서 접속)
-      - "${MINIO_CONSOLE_PORT}:9001" # Web Console 포트 (브라우저 접속)
+      - ${MINIO_API_PORT}:9000 # API 포트 (코드에서 접속)
+      - ${MINIO_CONSOLE_PORT}:9001 # Web Console 포트 (브라우저 접속)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -21,9 +21,9 @@ services:
     volumes:
       - minio_data:/data
 
-  minio_mc:
+  minio-mc:
     image: minio/mc
-    container_name: minio_mc
+    container_name: minio-mc
     depends_on:
       minio:
         condition: service_healthy

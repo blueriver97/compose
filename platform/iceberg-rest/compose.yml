@@ -1,0 +1,44 @@
+services:
+  postgresql:
+    container_name: postgresql
+    image: postgres:12
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 3
+
+  iceberg-rest:
+    image: apache/iceberg-rest-fixture
+    container_name: iceberg-rest
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      CATALOG_URI: jdbc:postgresql://postgresql:5432/${POSTGRES_DB}
+      CATALOG_JDBC_USER: ${POSTGRES_USER}
+      CATALOG_JDBC_PASSWORD: ${POSTGRES_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+      CATALOG_WAREHOUSE: ${CATALOG_WAREHOUSE}
+      CATALOG_IO__IMPL: ${CATALOG_IO__IMPL}
+      CATALOG_S3_ENDPOINT: ${CATALOG_S3_ENDPOINT}
+      CATALOG_S3_ACCESS__KEY__ID: ${MINIO_ROOT_USER}
+      CATALOG_S3_SECRET__ACCESS__KEY: ${MINIO_ROOT_PASSWORD}
+      CATALOG_S3_PATH__STYLE__ACCESS: ${CATALOG_S3_PATH__STYLE__ACCESS}
+    command: java -cp /usr/lib/iceberg-rest/*:iceberg-rest-adapter.jar org.apache.iceberg.rest.RESTCatalogServer
+    networks:
+      - default
+    ports:
+      - 8181:8181
+    volumes:
+      - ./postgresql-42.7.5.jar:/usr/lib/iceberg-rest/postgresql-42.7.5.jar
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
