@@ -12,14 +12,14 @@ Airflow 등 최신 코드를 지속적으로 반영해야 하는 환경에서 Si
 
 ```bash
 mkdir -p ~/.ssh
-ssh-keygen -t ed25519 -C "gitsync" -f ./ssh/id_ed25519
-chmod 600 ./ssh/id_ed25519
+ssh-keygen -t ed25519 -C "" -f ~/.ssh/id_ed25519
+chmod 600 ~/.ssh/id_ed25519
 ssh-keyscan github.com >> ~/.ssh/known_hosts
 ```
 
 - 생성된 파일
-- `./ssh/id_ed25519`: 프라이빗 키 (절대 외부 유출 금지)
-- `./ssh/id_ed25519.pub`: 퍼블릭 키 (GitHub 저장소에 미리 등록되어 있어야 동작)
+- `id_ed25519`: 프라이빗 키 (절대 외부 유출 금지)
+- `id_ed25519.pub`: 퍼블릭 키 (GitHub 저장소에 미리 등록되어 있어야 동작)
 
 ## 2. 구성
 
@@ -45,18 +45,20 @@ docker-compose up -d
 
 ## 5. 트러블슈팅 (Troubleshooting)
 
-Q. "Host key verification failed" 에러가 발생합니다.
+### 1. Host key verification failed
 
-./ssh/known_hosts 파일이 없거나 GitHub의 키 정보가 올바르지 않은 경우입니다. 1.3 Known Hosts 파일 생성 단계를 다시 수행하십시오.
+~/.ssh/known_hosts 파일이 없거나 GitHub의 키 정보가 올바르지 않은 경우입니다. Known Hosts 파일 생성 단계를 다시 수행하십시오.
 
-Q. "Permission denied (publickey)" 에러가 발생합니다.
+### 2. Permission denied (publickey)
 
-./ssh/id_ed25519 파일이 올바른 키인지, 그리고 GitHub 저장소의 Deploy Key 또는 사용자 설정에 해당 Public Key가 등록되어 있는지 확인하십시오.
+~/.ssh/id_ed25519 파일이 올바른 키인지, 그리고 GitHub 저장소의 Deploy Key 또는 사용자 설정에 해당 Public Key가 등록되어 있는지 확인하십시오.
 
-호스트에서 ./ssh/id_ed25519 파일의 권한이 600인지 확인하십시오.
+호스트에서 ~/.ssh/id_ed25519 파일의 권한이 600인지 확인하십시오.
 
-Q. "./git: permission denied" 등 파일 쓰기 에러가 발생합니다.
+### 3. `./git: permission denied` 등 파일 쓰기 에러
 
-git-sync 컨테이너는 보안상 root가 아닌 특정 사용자(UID 65533)로 실행될 수 있습니다. 호스트의 ./git-data 디렉토리에 쓰기 권한을 부여해야 합니다.
+git-sync 컨테이너는 보안상 root가 아닌 특정 사용자(UID 65533)로 실행될 수 있습니다.
+
+호스트의 ./git-data 디렉토리에 쓰기 권한을 부여해야 합니다.
 
 테스트를 위해 임시로 권한을 엽니다: chmod 777 ./git-data

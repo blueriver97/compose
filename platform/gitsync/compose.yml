@@ -44,4 +44,4 @@ services:
       - ./git-data:/git
 
       # SSH 키 및 known_hosts 파일 제공
-      - ./ssh:/tmp/.ssh:ro
+      - ~/.ssh:/tmp/.ssh:ro
