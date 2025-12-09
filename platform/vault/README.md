@@ -1,7 +1,5 @@
 # Vault
 
-## 목차
-
 - [설치 및 준비](#설치-및-준비)
   - [초기화 (최초 1회)](#초기화-최초-1회)
   - [봉인 해제 (서버 기동 시)](#봉인-해제-서버-기동-시)
@@ -28,9 +26,9 @@
   - [시크릿 저장 및 조회](#시크릿-저장-및-조회)
   - [토큰 발급](#토큰-발급)
 
----
-
 ## 설치 및 준비
+
+---
 
 ### 초기화 (최초 1회)
 
@@ -58,9 +56,9 @@ vault login <Root Token>
 vault auth enable userpass
 ```
 
----
-
 ## 정책 관리
+
+---
 
 ### 정책 파일 생성
 
@@ -91,9 +89,9 @@ vault policy delete <policy_name>
 vault policy list
 ```
 
----
-
 ## 사용자 관리
+
+---
 
 ### 사용자 생성 및 삭제
 
@@ -119,9 +117,9 @@ vault read auth/userpass/users/<username>
 # vault read auth/userpass/users/johndoe
 ```
 
----
-
 ## 사용자-정책 연동
+
+---
 
 ### Identity 엔티티 생성
 
@@ -166,9 +164,9 @@ vault read identity/role/<role_name>
 # vault read identity/role/johndoe-role
 ```
 
----
-
 ## 사용법
+
+---
 
 ### 시크릿 저장 및 조회
 

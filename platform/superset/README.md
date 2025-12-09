@@ -53,7 +53,7 @@ awsathena+rest://${AWS_ACCESS_KEY_ID}:${AWS_SECRET_ACCESS_KEY}@athena.ap-northea
 
 ### SUPERSET_SECRET_KEY 설정
 
-- .env 파일 내 SUPERSET_SECRET_KEY 값을 설정해야 superset_init 과정에서 오류 없이 실행됩니다.
+- docker/.env 파일 내 SUPERSET_SECRET_KEY 값을 설정해야 superset_init 과정에서 오류 없이 실행됩니다.
 
 ```
 --------------------------------------------------------------------------------
@@ -66,6 +66,12 @@ For more info, see: https://superset.apache.org/docs/configuration/configuring-s
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 Refusing to start due to insecure SECRET_KEY
+```
+
+- 키 생성
+
+```bash
+openssl rand -base64 42
 ```
 
 ### 초기 계정

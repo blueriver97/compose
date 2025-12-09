@@ -43,7 +43,12 @@ REST Catalog는 모든 Iceberg 클라이언트와 카탈로그 서버 간의 통
 
 ### 사전 준비
 
-- MinIO 서비스가 실행중이고, iceberg-bucket이라는 이름의 저장소가 생성되어 있어야 합니다.
+- Storage: [`../minio`](../minio) 디렉토리에서 MinIO 서비스를 먼저 실행해야 합니다.
+  ```bash
+  cd ../minio
+  docker-compose up -d
+  ```
+- 기본 버킷 생성 여부를 확인하십시오.
 
 ### 실행
 

@@ -1,45 +1,29 @@
-# Repository Base (Project Template)
+# Docker Compose Collection
 
-이 저장소는 팀의 표준 개발 환경, 보안 설정(TruffleHog), 코드 품질 분석(SonarQube), AI 커밋 메시지 작성 도구가 통합된 기본 템플릿 저장소입니다.
-
-새로운 프로젝트를 시작할 때 이 저장소를 템플릿으로 사용하여 생성하십시오.
+이 저장소는 데이터 엔지니어링 및 DevOps 환경 구축을 위한 다양한 Docker Compose 스택과 유틸리티를 모아둔 모노레포입니다.
+Base OS 이미지부터 데이터베이스, 모니터링, 플랫폼 서비스까지 모듈화하여 관리합니다.
 
 ---
 
-## 1. 주요 기능 (Features)
+## 1. 디렉토리 구조 (Directory Map)
 
-- 보안 (Security): TruffleHog를 통한 비밀 키(Secret Key) 커밋 방지
-- 품질 (Quality): SonarQube/SonarCloud 연동 자동화
-- 자동화 (Automation): pre-commit 훅을 이용한 코드 포맷팅(Prettier) 및 커밋 메시지 검사
-- AI 지원 (AI Assistant): OpenCommit(Gemini)을 이용한 커밋 메시지 자동 작성
+| 분류           | 서비스 / 모듈  | 경로                          | 설명                                               |
+| :------------- | :------------- | :---------------------------- | :------------------------------------------------- |
+| **Base**       | OS Images      | [`base/`](./base)             | Ubuntu, Rocky, AmazonLinux 베이스 이미지           |
+| **Database**   | RDBMS / NoSQL  | [`database/`](./database)     | MySQL, MSSQL, Redis 및 Data Generator              |
+| **Platform**   | Big Data & Ops | [`platform/`](./platform)     | Superset, Iceberg, MinIO, Vault, Nexus, GitSync 등 |
+| **Monitoring** | Observability  | [`monitoring/`](./monitoring) | Prometheus, Grafana, VictoriaMetrics, Exporters    |
+| **Runtime**    | Language / AI  | [`runtime/`](./runtime)       | Python Runtime, Ollama(LLM)                        |
 
 ---
 
 ## 2. 필수 요구 사항 (Prerequisites)
 
-이 템플릿을 사용하기 위해 로컬 환경에 다음 도구들이 설치되어 있어야 합니다.
-
-- Node.js (v22 이상)
-  - macOS: `brew install node`
-  - Ubuntu: `curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt install -y nodejs`
-  - Amazon Linux 2023: `sudo dnf install nodejs22`
-
-- Python (v3.11)
-  - macOS: `brew install python@3.11`
-  - Ubuntu: `sudo add-apt-repository ppa:deadsnakes/ppa -y && sudo apt install python3.11 python3.11-venv`
-  - Amazon Linux 2023: `sudo dnf install python3.11 python3.11-devel`
-
-- GitHub CLI (gh) (시크릿 자동 등록)
-  - macOS: `brew install gh`
-  - Ubuntu: `sudo apt install gh`
-  - Amazon Linux 2023: `sudo dnf install 'dnf-command(config-manager)' & sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo & sudo dnf install gh`
+- Docker Desktop or Docker Engine (Compose plugin 포함)
+- Python 3.11+ (스크립트 실행용)
 
 ---
 
-## 3. 초기 설정 (Setup)
+## 3. 시작하기 (Getting Started)
 
-저장소를 Clone 받은 후, 프로젝트 루트에서 다음 명령어를 최초 한 번 실행하십시오.
-
-```bash
-npm run setup
-```
+각 디렉토리의 README.md를 참조하여 개별 서비스를 실행할 수 있습니다.
