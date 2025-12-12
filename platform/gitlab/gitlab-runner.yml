@@ -1,0 +1,21 @@
+services:
+  gitlab-runner:
+    image: gitlab/gitlab-runner:alpine
+    container_name: gitlab-runner
+    restart: always
+    environment:
+      TZ: Asia/Seoul
+    networks:
+      - default
+    ports:
+      - 8093:8093
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./gitlab-runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
