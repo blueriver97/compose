@@ -8,6 +8,7 @@ shutdown_timeout = 0
 [[runners]]
   name = "Global Runner"
   url = "http://gitlab:8888"
+  clone_url = "http://gitlab:8888"
   id = 2
   token = ""
   token_obtained_at = 2025-12-12T05:40:56Z

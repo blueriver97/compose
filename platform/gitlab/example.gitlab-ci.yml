@@ -1,0 +1,62 @@
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    # main 브랜치이거나, Merge Request일 때만 파이프라인 실행 (불필요한 실행 방지)
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+stages:
+  - build
+  - test
+  - deploy
+
+# 모든 Job에 공통 적용 (deploy에서는 덮어씌워짐)
+before_script:
+  - echo 'Global setup...'
+
+build:
+  stage: build
+  allow_failure: false
+  image: python:3.11.10-slim-bookworm
+  script:
+    - echo 'Building application...'
+    # 예시: 가상환경 생성이나 빌드 산출물 생성
+    - mkdir -p dist
+    - echo "Build Artifact" > dist/build_result.txt
+  # [중요] 빌드 결과물을 다음 스테이지로 전달
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 hour
+
+test:
+  stage: test
+  allow_failure: false
+  image: python:3.11.10-slim-bookworm
+  script:
+    - echo 'Testing...'
+    # build 단계에서 넘어온 artifacts(dist/)가 있는지 확인 가능
+    - ls -l dist/
+
+deploy:
+  stage: deploy
+  allow_failure: false
+  image: alpine:latest
+  # Global before_script 대신 아래 내용이 실행됨
+  before_script:
+    - echo 'Setting up SSH for Deploy...'
+    - apk update && apk add --no-cache rsync openssh
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | base64 -d | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H $SSH_HOST > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    # [중요] .git 폴더 제외 및 dist(빌드결과물) 또는 소스 전송
+    # 여기서는 예시로 현재 디렉토리 전체를 보내되 .git은 제외함
+    - rsync -avz --delete --exclude '.git' . SSH_USER@$SSH_HOST:<somepath>/$CI_PROJECT_NAME
+  rules:
+    # main 브랜치일 때만 배포 실행 (only 대신 rules 사용 권장)
+    - if: $CI_COMMIT_BRANCH == "main"

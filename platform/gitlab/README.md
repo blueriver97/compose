@@ -70,6 +70,47 @@ docker exec -it gitlab-runner gitlab-runner register
 
 - **Default Docker image**: alpine:latest (또는 ubuntu 등 기본 이미지)
 
+## 배포 설정 (Deployment Setup)
+
+---
+
+이 프로젝트는 GitLab Runner와 Docker Executor를 사용하여 CI/CD 파이프라인을 구축하였습니다. 배포는 SSH를 통해 타겟 서버에 접속하여 수행됩니다.
+
+### 1. SSH 키 생성 및 등록
+
+배포 서버(Target)와 GitLab Runner 간의 신뢰 관계를 형성하기 위해 ED25519 알고리즘을 사용한 SSH 키 쌍을 생성합니다.
+
+```bash
+# 1. 로컬 또는 관리자 PC에서 키 생성 (암호 없음)
+ssh-keygen -t ed25519 -N '' -f ./id_ed25519_deploy
+
+# 2. 공개키(Public Key)를 배포 타겟 서버에 복사
+# 배포를 수행할 계정(예: deploy)으로 전송해야 함
+ssh-copy-id -i ./id_ed25519_deploy.pub deploy@<TARGET_SERVER_IP>
+```
+
+### 2. GitLab CI/CD 변수 설정
+
+보안을 위해 접속 정보와 비밀키는 코드에 포함하지 않고, `GitLab Project Settings > CI/CD > Variables`에 등록하여 사용합니다.
+
+| 변수명 (Key)    | 설명 예시                          | 값           | 설정 옵션                                     |
+| --------------- | ---------------------------------- | ------------ | --------------------------------------------- |
+| SSH_HOST        | 배포 대상 서버 IP 또는 도메인      | 192.168.0.10 | Masked                                        |
+| SSH_USER        | 배포 대상 서버의 계정명            | deploy       | Masked                                        |
+| SSH_PRIVATE_KEY | id_ed25519_deploy 파일의 전체 내용 | ...          | Masked 해제 (포맷 문제 방지), Protected(권장) |
+| SSH_PORT        | (Optional) SSH 포트                | 22           | Masked                                        |
+
+### 3. GitLab Runner 설정 (config.toml)
+
+Docker Executor 사용 시, 컨테이너 내부에서 GitLab 서버의 주소를 올바르게 해석하기 위해 clone_url 설정이 필요합니다. (특히 GitLab이 로컬 네트워크나 Docker 컨테이너로 띄워진
+경우 필수)
+
+[example.config.toml](example.config.toml) 내용 참조 필요
+
+### 4. .gitlab-ci.yml 예시
+
+[example.gitlab-ci.yml](example.gitlab-ci.yml) 내용 참조 필요
+
 ## 트러블슈팅 (Troubleshooting)
 
 ---
