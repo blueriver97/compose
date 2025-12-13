@@ -1,0 +1,31 @@
+pipeline_name: ldap-source
+source:
+  type: ldap
+  config:
+    env: DEV
+    platform_instance: company-ldap
+    ldap_server: "ldaps://ldap.example.com:636"
+    ldap_user: "cn=AdminUser,cn=Users,dc=example,dc=com"
+    ldap_password: ${LDAP_PASSWORD}
+
+    # 검색 범위 최적화
+    # base_dn 대신 user_dn과 group_dn을 명시하여 검색 범위를 좁힙니다.
+    base_dn: "dc=example,dc=com" # fallback용
+    # 실제 사람(person)이고 비활성화되지 않은 계정만 가져오기
+    filter: "(&(objectClass=user)(objectCategory=person)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
+    # 페이지네이션
+    page_size: 500
+    # 사설 인증서 사용 시 SSL 에러가 난다면 true로 설정
+    ignore_server_certificate: true
+
+    stateful_ingestion:
+      enabled: true
+      remove_stale_metadata: true
+
+datahub_api:
+  server: "http://datahub-gms:8080"
+
+sink:
+  type: datahub-rest
+  config:
+    server: "http://datahub-gms:8080"

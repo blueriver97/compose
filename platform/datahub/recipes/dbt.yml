@@ -1,0 +1,23 @@
+pipeline_name: dbt-source
+source:
+  type: dbt
+  config:
+    env: DEV
+    platform_instance: ${DBT_PROJECT_ROOT}
+    manifest_path: ${DBT_PROJECT_ROOT}/target/manifest.json
+    catalog_path: ${DBT_PROJECT_ROOT}/target/catalog.json
+    sources_path: ${DBT_PROJECT_ROOT}/target/sources.json
+    run_results_paths:
+      - ${DBT_PROJECT_ROOT}/target/run_results.json
+    target_platform: iceberg
+    stateful_ingestion:
+      enabled: true
+      remove_stale_metadata: true
+
+datahub_api:
+  server: http://datahub-gms:8080
+
+sink:
+  type: datahub-rest
+  config:
+    server: http://datahub-gms:8080

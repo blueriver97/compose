@@ -1,0 +1,21 @@
+pipeline_name: superset-source
+source:
+  type: superset
+  config:
+    env: DEV
+    platform_instance: "superset"
+    connect_uri: http://superset_app:8088
+    username: ${USERNAME:-admin}
+    password: ${PASSWORD:-admin}
+    provider: "db" # "ldap"
+    stateful_ingestion:
+      enabled: true
+      remove_stale_metadata: true
+
+datahub_api:
+  server: http://datahub-gms:8080
+
+sink:
+  type: datahub-rest
+  config:
+    server: http://datahub-gms:8080

@@ -1,0 +1,40 @@
+pipeline_name: mysql-source
+source:
+  type: mysql
+  config:
+    env: DEV
+    platform_instance: data-pipeline
+    host_port: ${MYSQL_HOST}:3306
+    username: ${USERNAME}
+    password: ${PASSWORD}
+    database_pattern:
+      allow:
+        - "^data-pipeline$"
+        - "^analytics$"
+      deny:
+        - "^test$"
+        - "^dev_.*"
+    table_pattern:
+      allow:
+        - "data-pipeline.svc_.*"
+        - "data-pipeline.mart_.*"
+        - "analytics..*"
+      deny:
+        - ".*_backup"
+        - ".*_temp"
+    include_tables: true
+    include_views: true
+    profiling:
+      enabled: false
+      profile_table_level_only: true
+    stateful_ingestion:
+      enabled: true
+      remove_stale_metadata: true
+
+datahub_api:
+  server: http://datahub-gms:8080
+
+sink:
+  type: datahub-rest
+  config:
+    server: http://datahub-gms:8080

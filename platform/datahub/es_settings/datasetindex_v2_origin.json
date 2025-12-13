@@ -1,0 +1,1200 @@
+{
+  "aliases": {},
+  "mappings": {
+    "properties": {
+      "_entityName": {
+        "type": "alias",
+        "path": "name"
+      },
+      "activeIncidentCreatedTimes": {
+        "type": "date"
+      },
+      "activeIncidentPriorities": {
+        "type": "long"
+      },
+      "activeIncidentTypes": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "activeIncidents": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "aliases": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "browsePathV2": {
+        "type": "text",
+        "fields": {
+          "length": {
+            "type": "token_count",
+            "analyzer": "unit_separator_pattern"
+          }
+        },
+        "analyzer": "browse_path_v2_hierarchy",
+        "fielddata": true
+      },
+      "browsePaths": {
+        "type": "text",
+        "fields": {
+          "length": {
+            "type": "token_count",
+            "analyzer": "slash_pattern"
+          }
+        },
+        "analyzer": "browse_path_hierarchy",
+        "fielddata": true
+      },
+      "columnCount": {
+        "type": "long"
+      },
+      "completedForms": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "completedFormsCompletedPromptIds": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "completedFormsCompletedPromptResponseTimes": {
+        "type": "date"
+      },
+      "completedFormsIncompletePromptIds": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "container": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "createdAt": {
+        "type": "date"
+      },
+      "customProperties": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "deprecated": {
+        "type": "boolean"
+      },
+      "description": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "domains": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "editedDescription": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "editedFieldDescriptions": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "editedFieldGlossaryTerms": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "editedFieldTagAttributionActors": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "editedFieldTagAttributionDates": {
+        "type": "date"
+      },
+      "editedFieldTagAttributionSources": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "editedFieldTags": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "editedFieldTermAttributionActors": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "editedFieldTermAttributionDates": {
+        "type": "date"
+      },
+      "editedFieldTermAttributionSources": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "editedName": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          },
+          "ngram": {
+            "type": "search_as_you_type",
+            "doc_values": false,
+            "max_shingle_size": 4,
+            "analyzer": "partial"
+          }
+        }
+      },
+      "externalUrl": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "failingTests": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "fieldDescriptions": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "fieldGlossaryTerms": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "fieldLabels": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "fieldPaths": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "fieldTagAttributionActors": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "fieldTagAttributionDates": {
+        "type": "date"
+      },
+      "fieldTagAttributionSources": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "fieldTags": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "fieldTermAttributionActors": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "fieldTermAttributionDates": {
+        "type": "date"
+      },
+      "fieldTermAttributionSources": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "glossaryTerms": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "hasActiveIncidents": {
+        "type": "boolean"
+      },
+      "hasColumnCount": {
+        "type": "boolean"
+      },
+      "hasContainer": {
+        "type": "boolean"
+      },
+      "hasDescription": {
+        "type": "boolean"
+      },
+      "hasDomain": {
+        "type": "boolean"
+      },
+      "hasFailingTests": {
+        "type": "boolean"
+      },
+      "hasGlossaryTerms": {
+        "type": "boolean"
+      },
+      "hasOwners": {
+        "type": "boolean"
+      },
+      "hasPassingTests": {
+        "type": "boolean"
+      },
+      "hasResolvedIncidents": {
+        "type": "boolean"
+      },
+      "hasRoles": {
+        "type": "boolean"
+      },
+      "hasRowCount": {
+        "type": "boolean"
+      },
+      "hasSizeInBytes": {
+        "type": "boolean"
+      },
+      "hasTags": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          },
+          "ngram": {
+            "type": "search_as_you_type",
+            "doc_values": false,
+            "max_shingle_size": 4,
+            "analyzer": "partial"
+          },
+          "wordGrams2": {
+            "type": "text",
+            "analyzer": "word_gram_2"
+          },
+          "wordGrams3": {
+            "type": "text",
+            "analyzer": "word_gram_3"
+          },
+          "wordGrams4": {
+            "type": "text",
+            "analyzer": "word_gram_4"
+          }
+        }
+      },
+      "incompleteForms": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "incompleteFormsCompletedPromptIds": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "incompleteFormsCompletedPromptResponseTimes": {
+        "type": "date"
+      },
+      "incompleteFormsIncompletePromptIds": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "isLatest": {
+        "type": "boolean"
+      },
+      "lastModifiedAt": {
+        "type": "date"
+      },
+      "lastOperationTime": {
+        "type": "date"
+      },
+      "materialized": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          },
+          "ngram": {
+            "type": "search_as_you_type",
+            "doc_values": false,
+            "max_shingle_size": 4,
+            "analyzer": "partial"
+          },
+          "wordGrams2": {
+            "type": "text",
+            "analyzer": "word_gram_2"
+          },
+          "wordGrams3": {
+            "type": "text",
+            "analyzer": "word_gram_3"
+          },
+          "wordGrams4": {
+            "type": "text",
+            "analyzer": "word_gram_4"
+          }
+        }
+      },
+      "numActiveIncidents": {
+        "type": "long"
+      },
+      "numResolvedIncidents": {
+        "type": "long"
+      },
+      "origin": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          },
+          "ngram": {
+            "type": "search_as_you_type",
+            "doc_values": false,
+            "max_shingle_size": 4,
+            "analyzer": "partial"
+          }
+        }
+      },
+      "ownerTypes": {
+        "type": "object"
+      },
+      "owners": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "passingTests": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "platform": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "platformInstance": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "qualifiedName": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          },
+          "ngram": {
+            "type": "search_as_you_type",
+            "doc_values": false,
+            "max_shingle_size": 4,
+            "analyzer": "partial"
+          },
+          "wordGrams2": {
+            "type": "text",
+            "analyzer": "word_gram_2"
+          },
+          "wordGrams3": {
+            "type": "text",
+            "analyzer": "word_gram_3"
+          },
+          "wordGrams4": {
+            "type": "text",
+            "analyzer": "word_gram_4"
+          }
+        }
+      },
+      "removed": {
+        "type": "boolean"
+      },
+      "resolvedIncidentCreatedTimes": {
+        "type": "date"
+      },
+      "resolvedIncidentPriorities": {
+        "type": "long"
+      },
+      "resolvedIncidentResolvedTimes": {
+        "type": "date"
+      },
+      "resolvedIncidentTypes": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "resolvedIncidents": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "roles": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "rowCount": {
+        "type": "long"
+      },
+      "runId": {
+        "type": "keyword"
+      },
+      "siblings": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "sizeInBytes": {
+        "type": "long"
+      },
+      "systemCreated": {
+        "type": "date"
+      },
+      "tagAttributionActors": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "tagAttributionDates": {
+        "type": "date"
+      },
+      "tagAttributionSources": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "tags": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "termAttributionActors": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "termAttributionDates": {
+        "type": "date"
+      },
+      "termAttributionSources": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "typeNames": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "upstreams": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "urn": {
+        "type": "keyword",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "urn_component",
+            "search_analyzer": "query_urn_component",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "ngram": {
+            "type": "search_as_you_type",
+            "doc_values": false,
+            "max_shingle_size": 4,
+            "analyzer": "partial_urn_component"
+          }
+        }
+      },
+      "verifiedForms": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
+        "analyzer": "urn_component",
+        "search_analyzer": "query_urn_component",
+        "search_quote_analyzer": "quote_analyzer"
+      },
+      "version": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "versionSet": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "versionSortId": {
+        "type": "keyword",
+        "normalizer": "keyword_normalizer",
+        "fields": {
+          "delimited": {
+            "type": "text",
+            "analyzer": "word_delimited",
+            "search_analyzer": "query_word_delimited",
+            "search_quote_analyzer": "quote_analyzer"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      }
+    }
+  },
+  "settings": {
+    "index": {
+      "max_ngram_diff": "17",
+      "routing": {
+        "allocation": {
+          "include": {
+            "_tier_preference": "data_content"
+          }
+        }
+      },
+      "refresh_interval": "1s",
+      "number_of_shards": "1",
+      "analysis": {
+        "filter": {
+          "sticky_delimiter_graph": {
+            "split_on_numerics": "false",
+            "split_on_case_change": "false",
+            "type": "word_delimiter_graph",
+            "type_table": [": => SUBWORD_DELIM", "_ => ALPHANUM", "- => ALPHA"],
+            "preserve_original": "true",
+            "generate_number_parts": "false"
+          },
+          "remove_quotes": {
+            "pattern": "['\"]",
+            "type": "pattern_replace",
+            "replacement": ""
+          },
+          "min_length": {
+            "type": "length",
+            "min": "3"
+          },
+          "autocomplete_custom_delimiter": {
+            "split_on_numerics": "false",
+            "split_on_case_change": "false",
+            "type": "word_delimiter",
+            "type_table": [": => SUBWORD_DELIM", "_ => ALPHANUM", "- => ALPHA"],
+            "preserve_original": "true"
+          },
+          "datahub_stop_words": {
+            "ignore_case": "true",
+            "type": "stop",
+            "stopwords": ["urn", "li"]
+          },
+          "default_syn_graph": {
+            "type": "synonym_graph",
+            "lenient": "false",
+            "synonyms": [
+              "cac, customer acquisition cost => cac, customer, acquisition, cost",
+              "stg, staging",
+              "dev, development",
+              "prod, production",
+              "glue, athena",
+              "s3, s_3",
+              "data platform, dataplatform",
+              "bigquery, big query => bigquery, big, query"
+            ]
+          },
+          "word_gram_2_filter": {
+            "max_shingle_size": "2",
+            "min_shingle_size": "2",
+            "output_unigrams": "false",
+            "type": "shingle"
+          },
+          "alpha_num_space": {
+            "type": "pattern_capture",
+            "patterns": [
+              "([a-z0-9 _-]{2,})",
+              "([a-z0-9 ]{2,})",
+              "\\\"([^\\\"]*)\\\""
+            ]
+          },
+          "stem_override": {
+            "type": "stemmer_override",
+            "rules": [
+              "customers, customer => customer",
+              "staging => staging",
+              "production => production",
+              "urn:li:dataplatform:hive => urn:li:dataplatform:hive",
+              "hive => hive",
+              "bigquery => bigquery",
+              "big query => big query",
+              "query => query"
+            ]
+          },
+          "multifilter_graph": {
+            "type": "multiplexer",
+            "filters": [
+              "lowercase,sticky_delimiter_graph",
+              "lowercase,alpha_num_space,default_syn_graph"
+            ]
+          },
+          "word_gram_4_filter": {
+            "max_shingle_size": "4",
+            "min_shingle_size": "4",
+            "output_unigrams": "false",
+            "type": "shingle"
+          },
+          "multifilter": {
+            "type": "multiplexer",
+            "filters": [
+              "lowercase,sticky_delimiter_graph,flatten_graph",
+              "lowercase,alpha_num_space,default_syn_graph,flatten_graph"
+            ]
+          },
+          "word_gram_3_filter": {
+            "max_shingle_size": "3",
+            "min_shingle_size": "3",
+            "output_unigrams": "false",
+            "type": "shingle"
+          }
+        },
+        "normalizer": {
+          "keyword_normalizer": {
+            "filter": ["lowercase", "asciifolding"]
+          }
+        },
+        "analyzer": {
+          "word_gram_2": {
+            "filter": [
+              "asciifolding",
+              "lowercase",
+              "trim",
+              "remove_quotes",
+              "word_gram_2_filter"
+            ],
+            "tokenizer": "word_gram_tokenizer"
+          },
+          "slash_pattern": {
+            "filter": ["lowercase"],
+            "tokenizer": "slash_tokenizer"
+          },
+          "browse_path_v2_hierarchy": {
+            "tokenizer": "unit_separator_path_tokenizer"
+          },
+          "partial_urn_component": {
+            "filter": [
+              "asciifolding",
+              "autocomplete_custom_delimiter",
+              "lowercase"
+            ],
+            "tokenizer": "main_tokenizer"
+          },
+          "query_urn_component": {
+            "filter": [
+              "asciifolding",
+              "multifilter_graph",
+              "trim",
+              "lowercase",
+              "datahub_stop_words",
+              "stop",
+              "stem_override",
+              "snowball",
+              "remove_quotes",
+              "unique",
+              "min_length"
+            ],
+            "tokenizer": "main_tokenizer"
+          },
+          "word_delimited": {
+            "filter": [
+              "asciifolding",
+              "multifilter",
+              "trim",
+              "lowercase",
+              "datahub_stop_words",
+              "stop",
+              "stem_override",
+              "snowball",
+              "remove_quotes",
+              "unique",
+              "min_length"
+            ],
+            "tokenizer": "main_tokenizer"
+          },
+          "unit_separator_pattern": {
+            "filter": ["lowercase"],
+            "tokenizer": "unit_separator_tokenizer"
+          },
+          "custom_keyword": {
+            "filter": ["trim", "lowercase", "asciifolding", "snowball"],
+            "tokenizer": "keyword"
+          },
+          "browse_path_hierarchy": {
+            "tokenizer": "path_hierarchy"
+          },
+          "query_word_delimited": {
+            "filter": [
+              "asciifolding",
+              "multifilter_graph",
+              "trim",
+              "lowercase",
+              "datahub_stop_words",
+              "stop",
+              "stem_override",
+              "snowball",
+              "remove_quotes",
+              "unique",
+              "min_length"
+            ],
+            "tokenizer": "main_tokenizer"
+          },
+          "quote_analyzer": {
+            "filter": [
+              "asciifolding",
+              "lowercase",
+              "remove_quotes",
+              "datahub_stop_words",
+              "stop",
+              "min_length"
+            ],
+            "tokenizer": "keyword"
+          },
+          "word_gram_4": {
+            "filter": [
+              "asciifolding",
+              "lowercase",
+              "trim",
+              "remove_quotes",
+              "word_gram_4_filter"
+            ],
+            "tokenizer": "word_gram_tokenizer"
+          },
+          "partial": {
+            "filter": [
+              "asciifolding",
+              "autocomplete_custom_delimiter",
+              "lowercase"
+            ],
+            "tokenizer": "main_tokenizer"
+          },
+          "urn_component": {
+            "filter": [
+              "asciifolding",
+              "multifilter",
+              "trim",
+              "lowercase",
+              "datahub_stop_words",
+              "stop",
+              "stem_override",
+              "snowball",
+              "remove_quotes",
+              "unique",
+              "min_length"
+            ],
+            "tokenizer": "main_tokenizer"
+          },
+          "word_gram_3": {
+            "filter": [
+              "asciifolding",
+              "lowercase",
+              "trim",
+              "remove_quotes",
+              "word_gram_3_filter"
+            ],
+            "tokenizer": "word_gram_tokenizer"
+          }
+        },
+        "tokenizer": {
+          "unit_separator_path_tokenizer": {
+            "type": "path_hierarchy",
+            "delimiter": "␟"
+          },
+          "word_gram_tokenizer": {
+            "pattern": "[(),./:\\s_]|(?<=\\S)(-)",
+            "type": "pattern"
+          },
+          "slash_tokenizer": {
+            "pattern": "[/]",
+            "type": "pattern"
+          },
+          "unit_separator_tokenizer": {
+            "pattern": "[␟]",
+            "type": "pattern"
+          },
+          "main_tokenizer": {
+            "pattern": "[(),./:]",
+            "type": "pattern"
+          }
+        }
+      },
+      "number_of_replicas": "1"
+    }
+  }
+}

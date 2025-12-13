@@ -129,9 +129,9 @@ services:
       CDC_USER: datahub_cdc
       DATAHUB_DB_NAME: datahub
       MYSQL_HOST: mysql
-      MYSQL_PASSWORD: datahub
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_PORT: "3306"
-      MYSQL_ROOT_PASSWORD: datahub
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USERNAME: datahub
     networks:
       default: null
@@ -252,12 +252,15 @@ services:
       KAFKA_BOOTSTRAP_SERVER: broker:29092
       PLAY_HTTP_CONTEXT: /
       THEME_V2_DEFAULT: "true"
+      METADATA_SERVICE_AUTH_ENABLED: "true"
+      AUTH_JAAS_ENABLED: "true"
     networks:
       default: null
     ports:
       - 9002:9002
     volumes:
       - .datahub/plugins:/etc/datahub/plugins
+      - ./auth/jaas.conf:/datahub-frontend/conf/jaas.conf
 
   datahub-gms:
     image: acryldata/datahub-gms:${DATAHUB_VERSION}

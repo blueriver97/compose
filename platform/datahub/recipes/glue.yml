@@ -1,0 +1,31 @@
+pipeline_name: glue-source
+source:
+  type: glue
+  config:
+    env: DEV
+    platform_instance: glue-catalog
+    aws_region: ap-northeast-2
+    aws_access_key_id: ${AWS_ACCESS_KEY_ID}
+    aws_secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+    aws_session_token: null
+    database_pattern:
+      allow:
+        - "prod_.*"
+    table_pattern:
+      deny:
+        - "tmp_.*"
+    profiling:
+      enabled: false
+      profile_table_level_only: true
+      max_workers: 10
+    stateful_ingestion:
+      enabled: true
+      remove_stale_metadata: true
+
+datahub_api:
+  server: http://datahub-gms:8080
+
+sink:
+  type: datahub-rest
+  config:
+    server: http://datahub-gms:8080
