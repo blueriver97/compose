@@ -43,8 +43,8 @@ docker-compose build --no-cache
 echo -e "AIRFLOW_UID=$(id -u)" > .env
 ```
 
-## Configuring Airflow
+## 환경변수 설정 (Airflow Configuration)
 
 ---
 
-`AIRFLOW__API__EXPOSE_CONFIG`: Airflow 내 설정 페이지 확인
+`AIRFLOW__API__EXPOSE_CONFIG`: Airflow 내 설정 페이지 접근 허용
