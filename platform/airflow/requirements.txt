@@ -1,0 +1,6 @@
+# Dependencies
+astronomer-cosmos
+dbt-core
+dbt-athena
+boto3
+apache-airflow-providers-apache-spark
