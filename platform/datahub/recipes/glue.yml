@@ -17,7 +17,6 @@ source:
     profiling:
       enabled: false
       profile_table_level_only: true
-      max_workers: 10
     stateful_ingestion:
       enabled: true
       remove_stale_metadata: true

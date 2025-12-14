@@ -87,6 +87,9 @@ services:
 
   opensearch:
     image: opensearchproject/opensearch:2.17.0
+    build:
+      context: .
+      dockerfile: opensearch.Dockerfile
     container_name: opensearch
     restart: always
     hostname: search
@@ -189,15 +192,17 @@ services:
       DATAHUB_PRECREATE_TOPICS: "true"
       EBEAN_DATASOURCE_DRIVER: com.mysql.jdbc.Driver
       EBEAN_DATASOURCE_HOST: mysql:3306
-      EBEAN_DATASOURCE_PASSWORD: datahub
+      EBEAN_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       EBEAN_DATASOURCE_URL: jdbc:mysql://mysql:3306/datahub?verifyServerCertificate=false&useSSL=true&useUnicode=yes&characterEncoding=UTF-8&enabledTLSProtocols=TLSv1.2
       EBEAN_DATASOURCE_USERNAME: datahub
       ELASTICSEARCH_BUILD_INDICES_CLONE_INDICES: "false"
       ELASTICSEARCH_HOST: opensearch
       ELASTICSEARCH_IMPLEMENTATION: opensearch
-      ELASTICSEARCH_INDEX_BUILDER_MAPPINGS_REINDEX: "true"
       ELASTICSEARCH_INDEX_BUILDER_REFRESH_INTERVAL_SECONDS: "3"
+      ELASTICSEARCH_MIN_SEARCH_FILTER_LENGTH: 2
+      ELASTICSEARCH_INDEX_BUILDER_MAPPINGS_REINDEX: "true"
       ELASTICSEARCH_INDEX_BUILDER_SETTINGS_REINDEX: "true"
+      ELASTICSEARCH_MAIN_TOKENIZER: "nori_tokenizer"
       ELASTICSEARCH_PORT: "9200"
       ELASTICSEARCH_PROTOCOL: http
       ELASTICSEARCH_USE_SSL: "false"
@@ -222,7 +227,7 @@ services:
     networks:
       default: null
     volumes:
-      - .datahub/plugins:/etc/datahub/plugins
+      - ./datahub/plugins:/etc/datahub/plugins
     labels:
       datahub_setup_job: "true"
 
@@ -259,7 +264,7 @@ services:
     ports:
       - 9002:9002
     volumes:
-      - .datahub/plugins:/etc/datahub/plugins
+      - ./datahub/plugins:/etc/datahub/plugins
       - ./auth/jaas.conf:/datahub-frontend/conf/jaas.conf
 
   datahub-gms:
@@ -280,14 +285,16 @@ services:
       DATAHUB_UPGRADE_HISTORY_KAFKA_CONSUMER_GROUP_ID: generic-duhe-consumer-job-client-gms
       EBEAN_DATASOURCE_DRIVER: com.mysql.jdbc.Driver
       EBEAN_DATASOURCE_HOST: mysql:3306
-      EBEAN_DATASOURCE_PASSWORD: datahub
+      EBEAN_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
       EBEAN_DATASOURCE_URL: jdbc:mysql://mysql:3306/datahub?verifyServerCertificate=false&useSSL=true&useUnicode=yes&characterEncoding=UTF-8&enabledTLSProtocols=TLSv1.2
       EBEAN_DATASOURCE_USERNAME: datahub
       ELASTICSEARCH_HOST: search
       ELASTICSEARCH_IMPLEMENTATION: opensearch
+      ELASTICSEARCH_MIN_SEARCH_FILTER_LENGTH: 2
       ELASTICSEARCH_INDEX_BUILDER_MAPPINGS_REINDEX: "true"
       ELASTICSEARCH_INDEX_BUILDER_SETTINGS_REINDEX: "true"
       ELASTICSEARCH_LIMIT_RESULTS_STRICT: "true"
+      ELASTICSEARCH_MAIN_TOKENIZER: "nori_tokenizer"
       ELASTICSEARCH_PORT: "9200"
       ELASTICSEARCH_PROTOCOL: http
       ELASTICSEARCH_USE_SSL: "false"
@@ -331,16 +338,13 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - .datahub/plugins:/etc/datahub/plugins
-      - .datahub/search:/etc/datahub/search
+      - ./datahub/plugins:/etc/datahub/plugins
+      - ./datahub/search:/etc/datahub/search
     labels:
       io.datahubproject.datahub.component: gms
 
   datahub-actions:
     image: acryldata/datahub-actions:${DATAHUB_VERSION}-slim
-    build:
-      context: .
-      dockerfile: actions.Dockerfile
     container_name: datahub-actions
     restart: always
     hostname: actions
