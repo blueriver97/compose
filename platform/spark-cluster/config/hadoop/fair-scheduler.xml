@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<allocations>
+    <queue name="root">
+        <queue name="default">
+            <minResources>0 mb,0vcores</minResources>
+            <maxResources>36864mb,12vcores</maxResources>
+            <maxRunningApps>10</maxRunningApps>
+            <maxAMShare>-1.0f</maxAMShare>
+            <schedulingPolicy>fair</schedulingPolicy>
+        </queue>
+    </queue>
+    <!-- Define more queues and their properties here -->
+</allocations>

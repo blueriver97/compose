@@ -39,3 +39,8 @@ coverage/
 # Linux 시스템에서 생성되는 파일들
 *~
 *.swp
+
+# 패키지 파일
+**/*.zip
+**/*.tgz
+**/*.tar.gz

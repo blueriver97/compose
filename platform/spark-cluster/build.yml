@@ -1,0 +1,28 @@
+services:
+  spark:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      args:
+        ZOOKEEPER_VERSION: $ZOOKEEPER_VERSION
+        HADOOP_VERSION: $HADOOP_VERSION
+        SPARK_VERSION: $SPARK_VERSION
+        ICEBERG_VERSION: $ICEBERG_VERSION
+      platforms:
+        - linux/amd64
+        - linux/arm64/v8
+    image: blueriver97/spark-cluster:$SPARK_VERSION
+    container_name: spark
+    hostname: spark
+    tty: true
+    restart: always
+    entrypoint: /bin/bash
+    networks:
+      - default
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+networks:
+  default:
+    driver: bridge
+    name: service-network

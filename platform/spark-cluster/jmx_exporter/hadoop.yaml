@@ -1,0 +1,77 @@
+startDelaySeconds: 0
+ssl: false
+lowercaseOutputName: false
+lowercaseOutputLabelNames: false
+
+whitelistObjectNames:
+  # 1. HDFS Core (NameNode & DataNode 공통 핵심 지표)
+  - "Hadoop:service=NameNode,name=*"
+  - "Hadoop:service=DataNode,name=*"
+
+  # 2. JVM Metrics (모든 Java 프로세스의 메모리/GC 상태)
+  - "Hadoop:service=*,name=JvmMetrics"
+
+  # 3. RPC Summary (포트별 성능 지표 - 대기 시간, 처리 시간)
+  - "Hadoop:service=*,name=RpcActivityForPort*"
+
+blacklistObjectNames:
+  # 너무 상세한 RPC 추적은 여전히 제외 (데이터 폭증 방지)
+  - "Hadoop:service=*,name=RpcDetailedActivity*"
+  - "Hadoop:service=*,name=RetryCache.NameNodeRetryCache"
+  - "Hadoop:service=*,name=UgiMetrics"
+
+rules:
+  # ---------------------------------------------------------
+  # Rule 1: JVM Metrics (GC, Memory Heap/Non-Heap)
+  # ---------------------------------------------------------
+  - pattern: 'Hadoop<service=(.*), name=JvmMetrics><>(.*): (\d+)'
+    attrNameSnakeCase: true
+    name: hadoop_jvm_$2
+    value: $3
+    labels:
+      service: HDFS
+      role: $1 # NameNode or DataNode automatically detected
+      type: "jvm"
+    type: GAUGE
+
+  # ---------------------------------------------------------
+  # Rule 2: RPC Activity (QueueTime, ProcessingTime, OpenConnections)
+  # Extracts port to distinguish between Client(8020) and Service RPC
+  # ---------------------------------------------------------
+  - pattern: 'Hadoop<service=(.*), name=RpcActivityForPort(\d+)><>(.*): (\d+)'
+    attrNameSnakeCase: true
+    name: hadoop_rpc_$3
+    value: $4
+    labels:
+      service: HDFS
+      role: $1
+      port: $2
+    type: GAUGE
+
+  # ---------------------------------------------------------
+  # Rule 3: MetricsSystem (Internal Metrics)
+  # ---------------------------------------------------------
+  - pattern: 'Hadoop<service=(.*), name=MetricsSystem, sub=(.*)><>(.*): (\d+)'
+    attrNameSnakeCase: true
+    name: hadoop_metrics_system_$3
+    value: $4
+    labels:
+      service: HDFS
+      role: $1
+      kind: "MetricsSystem"
+      sub: $2
+    type: GAUGE
+
+  # ---------------------------------------------------------
+  # Rule 4: General Fallback for NameNode/DataNode Core Metrics
+  # Covers: FSNamesystem, FSDatasetState(VolumeFailures) etc.
+  # ---------------------------------------------------------
+  - pattern: 'Hadoop<service=(.*), name=(.*)><>(.*): (\d+)'
+    attrNameSnakeCase: true
+    name: hadoop_$2_$3
+    value: $4
+    labels:
+      service: HDFS
+      role: $1
+      component: $2
+    type: GAUGE

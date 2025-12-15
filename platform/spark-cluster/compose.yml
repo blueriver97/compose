@@ -1,0 +1,112 @@
+x-cluster-common: &cluster-common
+  image: blueriver97/spark-cluster:${SPARK_VERSION}
+  environment: &cluster-common-env
+    AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+    YARN_RM1_WEBAPP_ADDR: node01:8088
+    YARN_RM2_WEBAPP_ADDR: node02:8089
+    YARN_NM_USER_HOME_DIR: /root
+  user: root
+  tty: true
+  restart: always
+  networks:
+    - default
+  extra_hosts:
+    - host.docker.internal:host-gateway
+  volumes:
+    - ./config/setup.sh:/root/setup.sh
+    - ./jmx_exporter:/opt/hadoop/jmx_exporter
+    #- ./config/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+
+services:
+  admin:
+    <<: *cluster-common
+    container_name: admin
+    hostname: admin
+    entrypoint: >
+      /bin/sh -c "
+      source /root/setup.sh;
+      sleep 3;
+      /opt/spark/sbin/start-history-server.sh;
+      /opt/spark/sbin/start-connect-server.sh;
+      tail -f /dev/null
+      "
+    ports:
+      - 18080:18080
+      - 15002:15002
+
+  node01:
+    <<: *cluster-common
+    container_name: node01
+    hostname: node01
+    environment:
+      <<: *cluster-common-env
+      YARN_NM_WEBAPP_ADDR: 0.0.0.0:8042
+    entrypoint: >
+      /bin/sh -c "
+      source /root/setup.sh;
+      echo 1 > /data/zookeeper/snapshot/myid;
+      /opt/zookeeper/bin/zkServer.sh start;
+      sleep 1;
+      /opt/hadoop/bin/yarn --daemon start resourcemanager;
+      /opt/hadoop/bin/yarn --daemon start nodemanager;
+      tail -f /dev/null
+      "
+    ports:
+      - 8088:8088
+      - 8042:8042
+    depends_on:
+      - admin
+
+  node02:
+    <<: *cluster-common
+    container_name: node02
+    hostname: node02
+    environment:
+      <<: *cluster-common-env
+      YARN_NM_WEBAPP_ADDR: 0.0.0.0:8043
+
+    tty: true
+    restart: always
+    entrypoint: >
+      /bin/sh -c "
+      source /root/setup.sh;
+      echo 2 > /data/zookeeper/snapshot/myid;
+      /opt/zookeeper/bin/zkServer.sh start;
+      sleep 1;
+      /opt/hadoop/bin/yarn --daemon start resourcemanager;
+      /opt/hadoop/bin/yarn --daemon start nodemanager;
+      tail -f /dev/null
+      "
+    ports:
+      - 8089:8089
+      - 8043:8043
+    depends_on:
+      - admin
+
+  node03:
+    <<: *cluster-common
+    container_name: node03
+    hostname: node03
+    environment:
+      <<: *cluster-common-env
+      YARN_NM_WEBAPP_ADDR: 0.0.0.0:8044
+
+    entrypoint: >
+      /bin/sh -c "
+      source /root/setup.sh;
+      echo 3 > /data/zookeeper/snapshot/myid;
+      /opt/zookeeper/bin/zkServer.sh start;
+      sleep 1;
+      /opt/hadoop/bin/yarn --daemon start nodemanager;
+      tail -f /dev/null
+      "
+    ports:
+      - 8044:8044
+    depends_on:
+      - admin
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
