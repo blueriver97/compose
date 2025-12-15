@@ -34,11 +34,12 @@ RUN dnf -y update && \
     dnf clean all && \
     rm -rf /var/cache/dnf
 
-# 5. Alternatives Setup (편의성 제공)
-# python3 명령어가 설치된 버전을 바라보도록 설정
+# 5. python3 명령어가 설치된 버전을 바라보도록 설정
 # 기본 python3, pip 심볼릭 링크 연결 (amazonlinux는 기본 python3 패키지와 충돌할 수 있으므로 명시적 연결)
-RUN alternatives --install /usr/bin/python3 python3 /usr/bin/python${SHORT_VERSION} 1 && \
-    alternatives --install /usr/bin/pip pip /usr/bin/pip${SHORT_VERSION} 1
+RUN ln -sf /usr/bin/python${SHORT_VERSION} /usr/local/bin/python3 && \
+    ln -sf /usr/bin/python${SHORT_VERSION} /usr/local/bin/python && \
+    ln -sf /usr/bin/pip${SHORT_VERSION} /usr/local/bin/pip3 && \
+    ln -sf /usr/bin/pip${SHORT_VERSION} /usr/local/bin/pip
 
 # 6. Upgrade Pip & Setuptools
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel

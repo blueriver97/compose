@@ -79,10 +79,10 @@ spark = (
 
 ## 트러블슈팅
 
-### Caused by: software.amazon.awssdk.core.exception.SdkClientException: Unable to execute HTTP request: iceberg-bucket.localhost (SDK Attempt Count: 6)
+> Caused by: software.amazon.awssdk.core.exception.SdkClientException: Unable to execute HTTP request: iceberg-bucket.localhost (SDK Attempt Count: 6)
 
 - False 설정 시, 버킷 이름이 MinIO 주소 앞에 .(dot)으로 붙으므로 `spark.sql.catalog.{CATALOG}.s3.path-style-access` 값을 True로 설정 필수
 
-### Caused by: java.io.IOException: software.amazon.awssdk.services.s3.model.S3Exception: The Access Key Id you provided does not exist in our records.
+> Caused by: java.io.IOException: software.amazon.awssdk.services.s3.model.S3Exception: The Access Key Id you provided does not exist in our records.
 
 - MinIO 인증 정보가 없는 경우 발생되며, 환경변수 AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY를 설정이 올바른지 확인 필요.
