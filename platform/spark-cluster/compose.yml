@@ -16,6 +16,7 @@ x-cluster-common: &cluster-common
   volumes:
     - ./config/setup.sh:/root/setup.sh
     - ./jmx_exporter:/opt/hadoop/jmx_exporter
+    - ./tests:/opt/tests
     #- ./config/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
 
 services:
@@ -23,7 +24,7 @@ services:
     <<: *cluster-common
     container_name: admin
     hostname: admin
-    entrypoint: >
+    command: >
       /bin/sh -c "
       source /root/setup.sh;
       sleep 3;
@@ -32,6 +33,7 @@ services:
       tail -f /dev/null
       "
     ports:
+      - 23:22
       - 18080:18080
       - 15002:15002
 
@@ -42,7 +44,7 @@ services:
     environment:
       <<: *cluster-common-env
       YARN_NM_WEBAPP_ADDR: 0.0.0.0:8042
-    entrypoint: >
+    command: >
       /bin/sh -c "
       source /root/setup.sh;
       echo 1 > /data/zookeeper/snapshot/myid;
@@ -65,10 +67,9 @@ services:
     environment:
       <<: *cluster-common-env
       YARN_NM_WEBAPP_ADDR: 0.0.0.0:8043
-
     tty: true
     restart: always
-    entrypoint: >
+    command: >
       /bin/sh -c "
       source /root/setup.sh;
       echo 2 > /data/zookeeper/snapshot/myid;
@@ -91,8 +92,7 @@ services:
     environment:
       <<: *cluster-common-env
       YARN_NM_WEBAPP_ADDR: 0.0.0.0:8044
-
-    entrypoint: >
+    command: >
       /bin/sh -c "
       source /root/setup.sh;
       echo 3 > /data/zookeeper/snapshot/myid;

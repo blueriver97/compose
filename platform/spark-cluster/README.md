@@ -56,6 +56,15 @@ aws s3 cp /opt/pyspark_venv.tar.gz s3://datalake/spark/venv/
 
 ---
 
+#### Host ↔︎ Admin 컨테이너 SSH 등록
+
+```bash
+cat ~/.ssh/id_ed25519.pub | docker exec -i admin sh -c 'mkdir -p /root/.ssh && cat >> /root/.ssh/authorized_keys'
+ssh -p 23 root@localhost
+```
+
+#### Spark Submit (컨테이너 내부 실행)
+
 ```bash
 /opt/spark/bin/spark-submit \
   --master yarn \
@@ -92,7 +101,7 @@ aws s3 cp /opt/pyspark_venv.tar.gz s3://datalake/spark/venv/
 
 ---
 
-## 이슈
+## 트러블슈팅(Troubleshooting)
 
 ### 1. spark-without-hadoop 사용 시 YARN 로그가 안 보이는 문제 (without-hadoop은 가능 여부 다시 검증 필요)
 
@@ -252,3 +261,9 @@ Exception in thread "main" java.lang.NoSuchMethodError: 'java.lang.Object org.ap
   있다.
 - 이 값을 SYSTEM_ERR에서 SYSTEM_OUT으로 변경할 경우, Spark 작업 로그가 stdout 채널에 출력된다.
 - 이렇게 설정된 이유를 추측해보면, 사용자가 print() 함수 등으로 직접 출력하는 내용을 stdout에 보여주고, 그 외 작업 로그를 stderr로 전달해서 용도를 분리하려는게 아닐까 싶다.
+
+---
+
+## Appendix
+
+- https://spark.apache.org/docs/latest/running-on-yarn.html
