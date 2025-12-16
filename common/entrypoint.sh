@@ -60,7 +60,7 @@ mkdir -p /var/run/sshd
 # 백그라운드로 SSHD 실행
 # (Docker의 메인 프로세스는 뒤에 오는 exec "$@"가 되어야 하므로)
 echo "[Entrypoint] Starting SSH Daemon..."
-/usr/sbin/sshd
+/usr/sbin/sshd -D &
 
 # ==============================================================================
 # 7. 메인 커맨드 실행 (CMD 전달)
