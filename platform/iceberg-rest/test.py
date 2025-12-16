@@ -20,10 +20,7 @@ class Settings(BaseSettings):
 
 config = Settings(_env_file=".env", _env_file_encoding="utf-8")
 
-# 환경 변수 체크 (카탈로그 생성까지는 iceberg-rest에 입력한 키로 처리 가능, 실제 데이터를 읽고/쓰는 작업 시 MinIO 인증키 필요)
-os.environ["AWS_ACCESS_KEY_ID"] = config.MINIO_ACCESS_KEY
-os.environ["AWS_SECRET_ACCESS_KEY"] = config.MINIO_SECRET_KEY
-
+# 카탈로그 생성까지는 iceberg-rest에 입력한 키로 처리 가능, 실제 데이터를 읽고/쓰는 작업 시 MinIO 인증키 필요
 CATALOG = config.CATALOG_NAME
 spark = (
     SparkSession.builder.appName("Iceberg Rest Catalog")
@@ -34,7 +31,10 @@ spark = (
     .config(f"spark.sql.catalog.{CATALOG}.uri", "http://localhost:8181")
     .config(f"spark.sql.catalog.{CATALOG}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
     .config(f"spark.sql.catalog.{CATALOG}.s3.endpoint", "http://localhost:9000")
-    .config(f"spark.sql.catalog.{CATALOG}.s3.path-style-access", True)
+    .config(f"spark.sql.catalog.{CATALOG}.s3.path-style-access", "true")
+    .config(f"spark.sql.catalog.{CATALOG}.client.region", "us-east-1")
+    .config(f"spark.sql.catalog.{CATALOG}.s3.access-key-id", config.MINIO_ACCESS_KEY)
+    .config(f"spark.sql.catalog.{CATALOG}.s3.secret-access-key", config.MINIO_SECRET_KEY)
     .getOrCreate()
 )
 
