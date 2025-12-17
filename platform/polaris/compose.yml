@@ -1,0 +1,286 @@
+services:
+  # 1. Polaris용 메타데이터 DB (User 제공 정보 활용)
+  polaris-postgres:
+    image: postgres:16
+    container_name: polaris-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - 5432:5432
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  polaris-bootstrap:
+    image: apache/polaris-admin-tool:latest
+    container_name: polaris-bootstrap
+    depends_on:
+      polaris-postgres:
+        condition: service_healthy
+    environment:
+      POLARIS_REALM: ${POLARIS_REALM}
+      ROOT_CLIENT_ID: ${ROOT_CLIENT_ID}
+      ROOT_CLIENT_SECRET: ${ROOT_CLIENT_SECRET}
+      POLARIS_PERSISTENCE_TYPE: relational-jdbc
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://polaris-postgres:5432/${POSTGRES_DB}
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+    command:
+      - "bootstrap"
+      - "--realm=${POLARIS_REALM}"
+      - "--credential=${POLARIS_REALM},${ROOT_CLIENT_ID},${ROOT_CLIENT_SECRET}"
+
+  # 2. Apache Polaris (카탈로그 서버)
+  polaris:
+    image: apache/polaris:latest
+    container_name: polaris
+    depends_on:
+      polaris-postgres:
+        condition: service_healthy
+      polaris-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      JAVA_DEBUG: true
+      JAVA_DEBUG_PORT: "*:5005"
+      POLARIS_PERSISTENCE_TYPE: relational-jdbc
+      QUARKUS_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      QUARKUS_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://polaris-postgres:5432/${POSTGRES_DB}
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_ENDPOINT_URL_S3: ${CATALOG_S3_ENDPOINT}
+      AWS_ENDPOINT_URL_STS: ${CATALOG_S3_ENDPOINT}
+      polaris.realm-context.realms: ${POLARIS_REALM}
+      polaris.features.DROP_WITH_PURGE_ENABLED: "true"
+      quarkus.otel.sdk.disabled: "true"
+      # 운영 환경 준수
+      polaris.realm-context.header-name: Polaris-Realm
+      polaris.realm-context.require-header: "true"
+      polaris.authentication.token-broker.rsa-key-pair.private-key-file: /tmp/keys/private-key.pem
+      polaris.authentication.token-broker.rsa-key-pair.public-key-file: /tmp/keys/public-key.pem
+    networks:
+      - default
+    ports:
+      - 8181:8181
+    volumes:
+      - ./rsa/private-key.pem:/tmp/keys/private-key.pem
+      - ./rsa/public-key.pem:/tmp/keys/public-key.pem
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:8182/q/health"]
+      interval: 2s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+
+  polaris-setup:
+    image: alpine/curl
+    container_name: polaris-setup
+    depends_on:
+      polaris:
+        condition: service_healthy
+    environment:
+      CLIENT_ID: ${ROOT_CLIENT_ID}
+      CLIENT_SECRET: ${ROOT_CLIENT_SECRET}
+      CATALOG_NAME: ${CATALOG_NAME}
+      REALM: ${POLARIS_REALM}
+      CATALOG_WAREHOUSE: ${CATALOG_WAREHOUSE}
+      CATALOG_BUCKET: ${CATALOG_BUCKET}
+      CATALOG_S3_ENDPOINT: ${CATALOG_S3_ENDPOINT}
+    entrypoint: /bin/sh
+    networks:
+      - default
+    command:
+      - -c
+      - |
+        set -e
+        apk add --no-cache jq
+
+        echo "Obtaining root access token..."
+        TOKEN_RESPONSE=$$(curl -s -X POST http://polaris:8181/api/catalog/v1/oauth/tokens \
+          -H 'Content-Type: application/x-www-form-urlencoded' \
+          -H "Polaris-Realm: $$REALM" \
+          -d "grant_type=client_credentials&client_id=$${CLIENT_ID}&client_secret=$${CLIENT_SECRET}&scope=PRINCIPAL_ROLE:ALL")
+
+        TOKEN=$$(echo $$TOKEN_RESPONSE | jq -r '.access_token')
+        echo "Obtained access token"
+
+        echo "Creating catalog '$$CATALOG_NAME' in realm $$REALM..."
+        PAYLOAD='{
+          "catalog": {
+            "name": "'$$CATALOG_NAME'",
+            "type": "INTERNAL",
+            "readOnly": false,
+            "properties": {
+              "default-base-location": "$$CATALOG_WAREHOUSE"
+            },
+            "storageConfigInfo": {
+              "storageType": "S3",
+              "allowedLocations": ["$$CATALOG_BUCKET"],
+              "endpoint": "$$CATALOG_S3_ENDPOINT",
+              "endpointInternal": "$$CATALOG_S3_ENDPOINT",
+              "pathStyleAccess": true
+            }
+          }
+        }'
+
+        curl -s -X POST http://polaris:8181/api/management/v1/catalogs \
+          -H "Authorization: Bearer $$TOKEN" \
+          -H "Accept: application/json" \
+          -H "Content-Type: application/json" \
+          -H "Polaris-Realm: $$REALM" \
+          -d "$$PAYLOAD" > /dev/null
+
+        echo "✅ Catalog created"
+
+        echo ""
+        echo "Creating principal 'admin_user'..."
+        PRINCIPAL_RESPONSE=$$(curl -s -X POST http://polaris:8181/api/management/v1/principals \
+          -H "Authorization: Bearer $$TOKEN" \
+          -H "Polaris-Realm: $$REALM" \
+          -H "Content-Type: application/json" \
+          -d '{"principal": {"name": "admin_user", "properties": {}}}')
+
+        USER_CLIENT_ID=$$(echo $$PRINCIPAL_RESPONSE | jq -r '.credentials.clientId')
+        USER_CLIENT_SECRET=$$(echo $$PRINCIPAL_RESPONSE | jq -r '.credentials.clientSecret')
+
+        echo "✅ Principal created with clientId: $$USER_CLIENT_ID"
+
+        echo "Creating principal role 'admin_role'..."
+        curl -s -X POST http://polaris:8181/api/management/v1/principal-roles \
+          -H "Authorization: Bearer $$TOKEN" \
+          -H "Polaris-Realm: $$REALM" \
+          -H "Content-Type: application/json" \
+          -d '{"principalRole": {"name": "admin_role", "properties": {}}}' > /dev/null
+
+        echo "✅ Principal role created"
+
+        echo "Creating catalog role 'catalog_role'..."
+        curl -s -X POST http://polaris:8181/api/management/v1/catalogs/$$CATALOG_NAME/catalog-roles \
+          -H "Authorization: Bearer $$TOKEN" \
+          -H "Polaris-Realm: $$REALM" \
+          -H "Content-Type: application/json" \
+          -d '{"catalogRole": {"name": "catalog_role", "properties": {}}}' > /dev/null
+
+        echo "✅ Catalog role created"
+
+        echo "Assigning principal role to principal..."
+        curl -s -X PUT http://polaris:8181/api/management/v1/principals/admin_user/principal-roles \
+          -H "Authorization: Bearer $$TOKEN" \
+          -H "Polaris-Realm: $$REALM" \
+          -H "Content-Type: application/json" \
+          -d '{"principalRole": {"name": "admin_role"}}' > /dev/null
+
+        echo "✅ Principal role assigned"
+
+        echo "Assigning catalog role to principal role..."
+        curl -s -X PUT http://polaris:8181/api/management/v1/principal-roles/admin_role/catalog-roles/$$CATALOG_NAME \
+          -H "Authorization: Bearer $$TOKEN" \
+          -H "Polaris-Realm: $$REALM" \
+          -H "Content-Type: application/json" \
+          -d '{"catalogRole": {"name": "catalog_role"}}' > /dev/null
+
+        echo "✅ Catalog role assigned"
+
+        echo "Granting CATALOG_MANAGE_CONTENT privilege..."
+        curl -s -X PUT http://polaris:8181/api/management/v1/catalogs/$$CATALOG_NAME/catalog-roles/catalog_role/grants \
+          -H "Authorization: Bearer $$TOKEN" \
+          -H "Polaris-Realm: $$REALM" \
+          -H "Content-Type: application/json" \
+          -d '{"type": "catalog", "privilege": "CATALOG_MANAGE_CONTENT"}' > /dev/null
+
+        echo "✅ Privileges granted"
+
+        echo ""
+        echo "=========================================="
+        echo "🎉 Polaris Quickstart Setup Complete!"
+        echo "=========================================="
+        echo ""
+        echo "Catalog: $$CATALOG_NAME"
+        echo "  Storage: S3 (MinIO)"
+        echo "  Location: $$CATALOG_BUCKET"
+        echo "  MinIO UI: $$CATALOG_S3_ENDPOINT"
+        echo ""
+        echo "Root credentials:"
+        echo "  Client ID:     $$CLIENT_ID"
+        echo "  Client Secret: $$CLIENT_SECRET"
+        echo ""
+        echo "User credentials:"
+        echo "  Client ID:     $$USER_CLIENT_ID"
+        echo "  Client Secret: $$USER_CLIENT_SECRET"
+        echo ""
+        echo "Polaris main APIs:"
+        echo "  - Iceberg REST:   http://localhost:8181/api/catalog/v1"
+        echo "  - Management:     http://localhost:8181/api/management/v1"
+        echo "  - Generic Tables: http://localhost:8181/api/polaris/v1"
+        echo ""
+        echo "Polaris admin APIs:"
+        echo "  - Health check:   http://localhost:8182/q/health"
+        echo "  - Metrics:        http://localhost:8182/q/metrics"
+        echo ""
+        echo "To get started with Spark:"
+        echo "  spark-sql \\"
+        echo "    --conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions \\"
+        echo "    --conf spark.sql.catalog.polaris=org.apache.iceberg.spark.SparkCatalog \\"
+        echo "    --conf spark.sql.defaultCatalog=polaris \\"
+        echo "    --conf spark.sql.catalog.polaris.type=rest \\"
+        echo "    --conf spark.sql.catalog.polaris.warehouse=$$CATALOG_NAME \\"
+        echo "    --conf spark.sql.catalog.polaris.uri=http://polaris:8181/api/catalog \\"
+        echo "    --conf spark.sql.catalog.polaris.credential=$$USER_CLIENT_ID:$$USER_CLIENT_SECRET \\"
+        echo "    --conf spark.sql.catalog.polaris.scope=PRINCIPAL_ROLE:ALL \\"
+        echo "    --conf spark.sql.catalog.polaris.s3.endpoint=$$CATALOG_S3_ENDPOINT \\"
+        echo "    --conf spark.sql.catalog.polaris.s3.path-style-access=true \\"
+        echo "    --conf spark.sql.catalog.polaris.s3.access-key-id=AWS_ACCESS_KEY_ID \\"
+        echo "    --conf spark.sql.catalog.polaris.s3.secret-access-key=AWS_SECRET_ACCESS_KEY \\"
+        echo "    --conf spark.sql.catalog.polaris.client.region=irrelevant"
+        echo ""
+        echo "To get started with REST API:"
+        echo "  # Get a token"
+        echo "  export TOKEN=\$$(curl -s -X POST http://polaris:8181/api/catalog/v1/oauth/tokens \\"
+        echo "    -d 'grant_type=client_credentials' \\"
+        echo "    -d 'client_id=$$USER_CLIENT_ID' \\"
+        echo "    -d 'client_secret=$$USER_CLIENT_SECRET' \\"
+        echo "    -d 'scope=PRINCIPAL_ROLE:ALL' \\"
+        echo "    | jq -r '.access_token')"
+        echo ""
+        echo "  # Create a namespace"
+        echo "  curl -X POST http://polaris:8181/api/catalog/v1/$$CATALOG_NAME/namespaces \\"
+        echo "    -H \"Authorization: Bearer \$$TOKEN\" \\"
+        echo "    -H 'Content-Type: application/json' \\"
+        echo "    -d '{\"namespace\": [\"my_namespace\"], \"properties\": {}}'"
+        echo ""
+        echo "  # List namespaces"
+        echo "  curl -X GET http://polaris:8181/api/catalog/v1/$$CATALOG_NAME/namespaces \\"
+        echo "    -H \"Authorization: Bearer \$$TOKEN\""
+        echo ""
+        echo "=========================================="
+
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    depends_on:
+      polaris-setup:
+        condition: service_completed_successfully
+    stdin_open: true
+    tty: true
+    networks:
+      - default
+    ports:
+      - 8080:8080
+    environment:
+      CLIENT_ID: ${ROOT_CLIENT_ID}
+      CLIENT_SECRET: ${ROOT_CLIENT_SECRET}
+    volumes:
+      - ./trino-config/catalog:/etc/trino/catalog
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
