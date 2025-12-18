@@ -25,9 +25,9 @@ done < ../../.env
 # - ICEBERG는 1.10.0이 최신버전 사용
 # - Database, Kafka, Iceberg 연동 관련해서 아래 패키지 외 필요 없음.
 # 2025-11-21: iceberg-aws-bundle 대신 iceberg-aws 의존성을 사용하는 이유에 대해서 README.md 6번 내용 참조.
+# 2025-12-18: Apache Polaris 패키지 추가, 아직 Spark 4.0.1 대응 버전이 없음
 declare -a jar_urls=(
     "https://repo1.maven.org/maven2/org/apache/spark/spark-connect_2.13/${SPARK_VERSION}/spark-connect_2.13-${SPARK_VERSION}.jar"
-#    "https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/${ICEBERG_VERSION}/iceberg-aws-bundle-${ICEBERG_VERSION}.jar"
     "https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws/${ICEBERG_VERSION}/iceberg-aws-${ICEBERG_VERSION}.jar"
     "https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-${SPARK_SHORT_VERSION}_2.13/${ICEBERG_VERSION}/iceberg-spark-runtime-${SPARK_SHORT_VERSION}_2.13-${ICEBERG_VERSION}.jar"
     "https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.13/${SPARK_VERSION}/spark-sql-kafka-0-10_2.13-${SPARK_VERSION}.jar"
@@ -39,8 +39,9 @@ declare -a jar_urls=(
     "https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/12.2.0.jre8/mssql-jdbc-12.2.0.jre8.jar"
     "https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.30/mysql-connector-java-8.0.30.jar"
     "https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.52/bundle-2.29.52.jar"
-#    "https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-slf4j-impl/2.24.3/log4j-slf4j-impl-2.24.3.jar"
     "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar"
+    "https://repo1.maven.org/maven2/org/apache/polaris/polaris-spark-3.5_2.13/1.2.0-incubating/polaris-spark-3.5_2.13-1.2.0-incubating.jar"
+    "https://repo1.maven.org/maven2/org/apache/polaris/polaris-core/1.2.0-incubating/polaris-core-1.2.0-incubating.jar"
 )
 
 

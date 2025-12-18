@@ -1,6 +1,7 @@
 x-cluster-common: &cluster-common
   image: blueriver97/spark-cluster:${SPARK_VERSION}
   environment: &cluster-common-env
+    AWS_REGION: $AWS_REGION
     AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
     YARN_RM1_WEBAPP_ADDR: node01:8088
