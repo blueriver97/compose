@@ -63,16 +63,19 @@ services:
       quarkus.otel.sdk.disabled: "true"
       # 운영 환경 준수
       polaris.realm-context.header-name: Polaris-Realm
-      polaris.realm-context.require-header: "true"
       polaris.authentication.token-broker.rsa-key-pair.private-key-file: /tmp/keys/private-key.pem
       polaris.authentication.token-broker.rsa-key-pair.public-key-file: /tmp/keys/public-key.pem
+      # 운영환경에서는 true로 설정해야 함.
+      # 2025-12-20 기준 Trino가 http 커스텀 헤더 전달을 지원하지 않으므로, 기본 Realm이 사용되도록 설정
+      polaris.realm-context.require-header: "false"
+
     networks:
       - default
     ports:
       - 8181:8181
     volumes:
-      - ./rsa/private-key.pem:/tmp/keys/private-key.pem
-      - ./rsa/public-key.pem:/tmp/keys/public-key.pem
+      - ./secret/private-key.pem:/tmp/keys/private-key.pem
+      - ./secret/public-key.pem:/tmp/keys/public-key.pem
     healthcheck:
       test: ["CMD", "curl", "http://localhost:8182/q/health"]
       interval: 2s
@@ -279,17 +282,29 @@ services:
     depends_on:
       polaris-setup:
         condition: service_completed_successfully
+    environment:
+      CLIENT_ID: ${ROOT_CLIENT_ID}
+      CLIENT_SECRET: ${ROOT_CLIENT_SECRET}
+      POLARIS_URI: http://polaris:8181/api/catalog
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_ENDPOINT: ${AWS_ENDPOINT_URL_S3}
+      CATALOG_NAME: ${CATALOG_NAME}
+      CATALOG_WAREHOUSE: ${CATALOG_WAREHOUSE}
     stdin_open: true
     tty: true
     networks:
       - default
     ports:
       - 8080:8080
-    environment:
-      CLIENT_ID: ${ROOT_CLIENT_ID}
-      CLIENT_SECRET: ${ROOT_CLIENT_SECRET}
+      - 8443:8443
     volumes:
       - ./trino-config/catalog:/etc/trino/catalog
+      - ./trino-config/config.properties:/etc/trino/config.properties
+      - ./trino-config/password-authenticator.properties:/etc/trino/password-authenticator.properties
+      - ./secret/password.db:/tmp/keys/password.db
+      - ./secret/keystore.p12:/tmp/keys/keystore.p12
 
 networks:
   default:
