@@ -15,4 +15,4 @@ htpasswd -b -B -C 10 secret/password.db trino trinoadmin
 openssl genrsa -out secret/server.key 2048
 openssl req -new -key secret/server.key -out secret/server.csr -config trino-config/san.cnf
 openssl x509 -req -days 3650 -in secret/server.csr -signkey secret/server.key -out secret/server.crt
-openssl pkcs12 -export -out keystore.p12 -inkey server.key -in server.crt -passout pass:password1! -name "localhost"
+openssl pkcs12 -export -out secret/keystore.p12 -inkey secret/server.key -in secret/server.crt -passout pass:password1! -name "localhost"
