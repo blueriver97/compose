@@ -3,25 +3,27 @@
 이 프로젝트는 Apache Polaris를 사용하여 Iceberg REST Catalog를 구축하고, 메타데이터 저장을 위한 PostgreSQL 및 데이터 스토리지를 위한 MinIO(S3)를
 연동하는 Docker Compose 환경을 제공합니다.
 
+데이터 조회를 위한 쿼리 엔진인 Trino 구성도 포함됩니다.
+
 ## 시스템 구성 (Architecture)
 
 ---
 
-Polaris: Apache Iceberg용 오픈 소스 REST 카탈로그 서버입니다.
-PostgreSQL: Polaris의 엔티티 및 권한 메타데이터를 저장하는 영속성 계층(Relational JDBC)입니다.
-MinIO: Iceberg 테이블의 실제 데이터가 저장되는 S3 호환 스토리지입니다.
+postgresql: Polaris의 엔티티 및 권한 메타데이터를 저장하는 영속성 계층(Relational JDBC)입니다.
+polaris: Apache Iceberg용 오픈 소스 REST 카탈로그 서버입니다.
+polaris-bootstrap: postgresql DB에 polaris 동작에 필요한 사전 구성등을 수행합니다.
 polaris-setup: 컨테이너 실행 시 자동으로 카탈로그 생성, Principal 생성, 권한 부여를 수행하는 초기화 스크립트입니다.
+trino: polaris 카탈로그를 거쳐 데이터 조회를 수행하는 쿼리 엔진입니다.
 
 ## 사전 준비 (Prerequisites)
 
 ---
 
+스토리지 용도로 사용되는 MinIO는 별도로 구성해야 합니다. [minio](../minio)
 Polaris 인증 및 토큰 브로커 기능을 위해 RSA 키 쌍이 필요합니다. 아래 스크립트를 사용하여 키를 생성하세요.
 
 ```bash
-# platform/polaris/rsa 디렉토리에서 실행
-cd rsa
-./generate_key.sh
+./init_key.sh
 ```
 
 ## 환경 설정 (.env)
@@ -31,25 +33,26 @@ cd rsa
 `.env` 파일을 통해 데이터베이스 정보, Polaris 관리자 계정, S3 연결 정보를 관리합니다.
 
 ```env
-# Postgres 설정
+# Postgres
 POSTGRES_DB=catalog
 POSTGRES_USER=admin
 POSTGRES_PASSWORD=admin
 
-# Polaris 관리자 설정
+# Polaris
 POLARIS_REALM=default
 ROOT_CLIENT_ID=root
 ROOT_CLIENT_SECRET=polarisadmin
 
-# MinIO (S3) 접속 정보
+# MinIO 접속 정보 (AWS Access Key / Secret Key 역할)
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_ENDPOINT_URL_S3=http://minio-server:9000
+AWS_ENDPOINT_URL_STS=http://minio-server:9000
 
-# Catalog 설정
+# Catalog 정보
 CATALOG_NAME=polaris
 CATALOG_WAREHOUSE=s3://datalake/iceberg-warehouse
-CATALOG_S3_ENDPOINT=http://minio-server:9000
 ```
 
 ## 실행 방법

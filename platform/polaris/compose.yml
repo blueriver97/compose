@@ -276,6 +276,7 @@ services:
         echo ""
         echo "=========================================="
 
+  # 3. Trino (쿼리 엔진)
   trino:
     image: trinodb/trino:latest
     container_name: trino
