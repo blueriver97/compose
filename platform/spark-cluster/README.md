@@ -7,21 +7,17 @@
 ### MinIO 디렉토리 생성 ([setup.sh](config/setup.sh) 생성 실패 시)
 
 ```bash
-docker exec admin hadoop fs -mkdir -p s3a://datalake/spark/logs
-docker exec admin hadoop fs -mkdir -p s3a://datalake/spark/staging
-docker exec admin hadoop fs -mkdir -p s3a://datalake/spark/venv
-docker exec admin hadoop fs -mkdir -p s3a://datalake/spark/jars
+S3_BUCKET=s3a://my-bucket-name
+docker exec admin hadoop fs -mkdir -p $S3_BUCKET/spark/logs
+docker exec admin hadoop fs -mkdir -p $S3_BUCKET/spark/staging
+docker exec admin hadoop fs -mkdir -p $S3_BUCKET/spark/venv
+docker exec admin hadoop fs -mkdir -p $S3_BUCKET/spark/jars
 ```
 
-### 가상환경 생성
+### 가상환경 구성 및 패키징 (컨테이너 내부 실행)
 
 ```bash
 python3 -m venv /opt/pyspark_venv
-```
-
-### 가상환경 구성 및 패키징
-
-```bash
 source /opt/pyspark_venv/bin/activate
 (pyspark_venv) pip install -U pip setuptools wheel
 (pyspark_venv) pip install pyarrow pandas pydantic pydantic_settings PyMySQL hvac venv-pack confluent-kafka
@@ -29,14 +25,14 @@ source /opt/pyspark_venv/bin/activate
 (pyspark_venv) venv-pack -o /opt/pyspark_venv.tar.gz
 ```
 
-### JAR Archive 구성
+### JAR Archive 구성 (컨테이너 내부 실행)
 
 ```bash
 cd /opt/spark/jars
 tar -zcvf /opt/spark-libs.tar.gz *
 ```
 
-### 파일 복사
+### 파일 복사 (컨테이너 내부 실행)
 
 #### MinIO
 
@@ -66,42 +62,45 @@ ssh -p 23 root@localhost
 #### Spark Submit (컨테이너 내부 실행)
 
 ```bash
-/opt/spark/bin/spark-submit \
-  --master yarn \
-  --deploy-mode cluster \
-  --class org.apache.spark.examples.SparkPi \
-  --num-executors 1 \
-  --executor-cores 1 \
-  --executor-memory 2G \
-  --driver-memory 2G \
-  $SPARK_HOME/examples/jars/spark-examples_2.12-3.5.6.jar \
-  10
+cd /opt/tests
+bash [submit.sh](tests/submit.sh)submit.sh
 ```
 
----
-
-## AWS 인증 관련 테스트
-
-|     | core-site.xml | env               | $HOME/.aws | spark.yarn.appMasterEnv | Accepted | Running |
-| --- | ------------- | ----------------- | ---------- | ----------------------- | -------- | ------- |
-| 1   | O             | X                 | X          |                         | ✅       | ✅      |
-| 2   | X             | X                 | O          |                         | ❌       | ❌      |
-| 3   | X             | O                 | X          |                         | ✅       | ❌      |
-| 4   | X             | O                 | X          | O                       | ✅       | ✅      |
-| 5   | X             | O                 | O          |                         | ✅       | ❌      |
-| 6   | X             | O                 | O          | O                       | ✅       | ✅      |
-| 7   | X             | X(spark-submit O) | X          |                         | ✅       | ❌      |
-| 8   | X             | X(spark-submit O) | X          | O                       | ✅       | ❌      |
-
-**성공 케이스 1)** core-site.xml에 인증 정보 설정
-
-**성공 케이스 2)** 전체 노드에 AWS ENV 구성 후, Submit 시 spark.yarn.appMasterEnv 옵션으로 AWS 인증 전달
-
-- `$HOME/.aws`는 아무런 영향을 주지 않음.
+## AWS 인증 관련
 
 ---
+
+> Hadoop Yarn 컨테이너 구성 과정에서의 파일 배포 시 (--py-files, spark-libs.tar.gz, pyspark_venv.tar.gz)
+
+[core-site.xml](config/hadoop/core-site.xml) 파일에 AWS S3 인증 정보를 작성.
+Yarn 관련 작업에서만 core-site.xml에 작성된 AWS 인증 정보를 참조함.
+
+> Spark Session에서 Glue Catalog 조회 또는 데이터 읽기/쓰기 시
+
+`spark.hadoop.fs.s3a.aws.credentials.provider` 옵션에 작성된 인증 체인(Chain)에 따라 다름.
+
+1. AWS SDK for Java v1 (`com.amazonaws.auth.DefaultAWSCredentialsProviderChain`)
+
+   2025년도 12월 31일 지원 종료, V2 전환 필요
+
+2. AWS SDK for Java v2 (`software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider`)
+   1. JAVA System Properties (`aws.region`, `aws.accessKeyId`, `aws.secretKey`)
+   2. 환경 변수 (`AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_ACCESS_KEY_ID`)
+   3. 웹 ID 토큰 및 IAM 역할 ARN (`AWS_WEB_IDENTITY_TOKEN_FILE`, `AWS_ROLE_ARN`)
+   4. credentials및 config파일 내 `[default]` 프로필 (`~/.aws/credentials`, `~/.aws/config`)
+   5. Amazon ECS 컨테이너 자격 증명
+   6. Amazon EC2 인스턴스 IAM 역할에서 제공하는 자격 증명
+   ```plain
+   software.amazon.awssdk.core.exception.SdkClientException: Unable to load credentials from any of the providers
+   in the chain AwsCredentialsProviderChain(credentialsProviders=[SystemPropertyCredentialsProvider(),
+   EnvironmentVariableCredentialsProvider(), WebIdentityTokenCredentialsProvider(), ProfileCredentialsProvider(),
+   ContainerCredentialsProvider(), InstanceProfileCredentialsProvider()])
+   ```
+   모든 과정 실패 시 위와 같은 오류 발생
 
 ## 트러블슈팅(Troubleshooting)
+
+---
 
 ### 1. spark-without-hadoop 사용 시 YARN 로그가 안 보이는 문제 (without-hadoop은 가능 여부 다시 검증 필요)
 

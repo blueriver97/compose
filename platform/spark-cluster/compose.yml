@@ -4,6 +4,8 @@ x-cluster-common: &cluster-common
     AWS_REGION: $AWS_REGION
     AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
     AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+    AWS_ENDPOINT_URL_S3: $AWS_ENDPOINT_URL_S3
+    S3_BUCKET: $S3_BUCKET
     YARN_RM1_WEBAPP_ADDR: node01:8088
     YARN_RM2_WEBAPP_ADDR: node02:8089
     YARN_NM_USER_HOME_DIR: /root
@@ -15,10 +17,11 @@ x-cluster-common: &cluster-common
   extra_hosts:
     - host.docker.internal:host-gateway
   volumes:
+    # Glue Catalog & S3 조합 사용 시 아래 주석 해제 (Spark 인증 체인)
+    # - $HOME/.aws:/root/.aws
     - ./config/setup.sh:/root/setup.sh
     - ./jmx_exporter:/opt/hadoop/jmx_exporter
     - ./tests:/opt/tests
-    #- ./config/hadoop/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
 
 services:
   admin:
