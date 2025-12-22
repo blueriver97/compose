@@ -29,11 +29,10 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
+    include /etc/nginx/include.d/*.conf;
     location / {
         root /usr/share/nginx/html;
         index index.html;
         # proxy_pass http://my-web-app:3000;
     }
-
-    include /etc/nginx/include.d/*.conf;
 }
