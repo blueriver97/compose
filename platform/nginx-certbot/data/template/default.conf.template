@@ -3,7 +3,7 @@ server {
     listen [::]:80;
     server_tokens off;
 
-    server_name example.ddns.net;
+    server_name ${SERVER_NAME};
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -19,13 +19,13 @@ server {
     listen [::]:443 ssl ipv6only=on; # managed by Certbot
     server_tokens off;
 
-    server_name example.ddns.net; # managed by Certbot
+    server_name ${SERVER_NAME}; # managed by Certbot
 
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
 
-    ssl_certificate /etc/letsencrypt/live/example.ddns.net/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/example.ddns.net/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME}/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
