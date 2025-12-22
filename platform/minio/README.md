@@ -23,15 +23,15 @@ S3를 대체하여 데이터 레이크, 로그 아카이빙, 또는 애플리케
 
 ### 주요 환경 변수
 
-| 변수명                       | 설명                                         | 기본값                             |
-| :--------------------------- | :------------------------------------------- | :--------------------------------- |
-| `MINIO_ROOT_USER`            | 관리자 ID (AWS Access Key 역할)              | (사용자 지정)                      |
-| `MINIO_ROOT_PASSWORD`        | 관리자 비밀번호 (AWS Secret Key 역할)        | (사용자 지정)                      |
-| `MINIO_API_PORT`             | S3 API 호환 포트 (코드 연동용)               | `9000`                             |
-| `MINIO_CONSOLE_PORT`         | Web Console 포트 (브라우저 접속용)           | `9001`                             |
-| `MINIO_DEFAULT_BUCKETS`      | 자동 생성할 버킷 목록 (쉼표로 구분)          | `datalake`                         |
-| `MINIO_ALIAS`                | mc 명령어에서 사용할 MinIO 서버 별칭         | `myminio`                          |
-| `MINIO_BROWSER_REDIRECT_URL` | 리버스 프록시 사용 시, MinIO 리다이렉션 주소 | `https://blueriver.ddns.net/minio` |
+| 변수명                       | 설명                                         | 기본값                                |
+| :--------------------------- | :------------------------------------------- | :------------------------------------ |
+| `MINIO_ROOT_USER`            | 관리자 ID (AWS Access Key 역할)              | (사용자 지정)                         |
+| `MINIO_ROOT_PASSWORD`        | 관리자 비밀번호 (AWS Secret Key 역할)        | (사용자 지정)                         |
+| `MINIO_API_PORT`             | S3 API 호환 포트 (코드 연동용)               | `9000`                                |
+| `MINIO_CONSOLE_PORT`         | Web Console 포트 (브라우저 접속용)           | `9001`                                |
+| `MINIO_DEFAULT_BUCKETS`      | 자동 생성할 버킷 목록 (쉼표로 구분)          | `datalake`                            |
+| `MINIO_ALIAS`                | mc 명령어에서 사용할 MinIO 서버 별칭         | `myminio`                             |
+| `MINIO_BROWSER_REDIRECT_URL` | 리버스 프록시 사용 시, MinIO 리다이렉션 주소 | `https://blueriver.ddns.net/minio/ui` |
 
 ### 데이터 저장 (Persisting Data)
 
