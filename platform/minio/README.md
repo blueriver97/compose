@@ -10,10 +10,10 @@ S3를 대체하여 데이터 레이크, 로그 아카이빙, 또는 애플리케
 
 `docker compose`를 통해 다음 두 가지 서비스가 실행됩니다.
 
-| 서비스명      | 역할            | 설명                                                                                               |
-| :------------ | :-------------- | :------------------------------------------------------------------------------------------------- |
-| minio         | 스토리지 서버   | S3 API 호환 스토리지 엔진 및 Web Console 제공                                                      |
-| createbuckets | 초기화 유틸리티 | 컨테이너 실행 시 `.env`에 정의된 버킷을 자동으로 생성하고 종료되는 일회성 컨테이너 (`mc` CLI 사용) |
+| 서비스명 | 역할            | 설명                                                                                               |
+| :------- | :-------------- | :------------------------------------------------------------------------------------------------- |
+| minio    | 스토리지 서버   | S3 API 호환 스토리지 엔진 및 Web Console 제공                                                      |
+| minio-mc | 초기화 유틸리티 | 컨테이너 실행 시 `.env`에 정의된 버킷을 자동으로 생성하고 종료되는 일회성 컨테이너 (`mc` CLI 사용) |
 
 ## 2. 설정 (Configuration)
 
@@ -23,13 +23,15 @@ S3를 대체하여 데이터 레이크, 로그 아카이빙, 또는 애플리케
 
 ### 주요 환경 변수
 
-| 변수명                  | 설명                                  | 기본값           |
-| :---------------------- | :------------------------------------ | :--------------- |
-| `MINIO_ROOT_USER`       | 관리자 ID (AWS Access Key 역할)       | (사용자 지정)    |
-| `MINIO_ROOT_PASSWORD`   | 관리자 비밀번호 (AWS Secret Key 역할) | (사용자 지정)    |
-| `MINIO_API_PORT`        | S3 API 호환 포트 (코드 연동용)        | `9000`           |
-| `MINIO_CONSOLE_PORT`    | Web Console 포트 (브라우저 접속용)    | `9001`           |
-| `MINIO_DEFAULT_BUCKETS` | 자동 생성할 버킷 목록 (쉼표로 구분)   | `iceberg-bucket` |
+| 변수명                       | 설명                                         | 기본값                             |
+| :--------------------------- | :------------------------------------------- | :--------------------------------- |
+| `MINIO_ROOT_USER`            | 관리자 ID (AWS Access Key 역할)              | (사용자 지정)                      |
+| `MINIO_ROOT_PASSWORD`        | 관리자 비밀번호 (AWS Secret Key 역할)        | (사용자 지정)                      |
+| `MINIO_API_PORT`             | S3 API 호환 포트 (코드 연동용)               | `9000`                             |
+| `MINIO_CONSOLE_PORT`         | Web Console 포트 (브라우저 접속용)           | `9001`                             |
+| `MINIO_DEFAULT_BUCKETS`      | 자동 생성할 버킷 목록 (쉼표로 구분)          | `datalake`                         |
+| `MINIO_ALIAS`                | mc 명령어에서 사용할 MinIO 서버 별칭         | `myminio`                          |
+| `MINIO_BROWSER_REDIRECT_URL` | 리버스 프록시 사용 시, MinIO 리다이렉션 주소 | `https://blueriver.ddns.net/minio` |
 
 ### 데이터 저장 (Persisting Data)
 
@@ -53,7 +55,7 @@ docker compose up -d
 
 ### 테스트
 
-- write_table.py 스크립트는 PySpark를 사용하여 MinIO에 Apache Iceberg 포맷으로 데이터를 쓰고 읽는 예제입니다.
+- [test.py](test.py) 스크립트는 PySpark를 사용하여 MinIO에 Apache Iceberg 포맷으로 데이터를 쓰고 읽는 예제입니다.
 - 아래 의존성 설치가 필요합니다.
 
   ```bash
@@ -63,12 +65,12 @@ docker compose up -d
 - MinIO 컨테이너가 실행 중인 상태에서 아래 명령어를 수행합니다.
 
   ```bash
-  python write_table.py
+  python test.py
   ```
 
 ### 주요 설정
 
-- MinIO를 로컬 S3로 사용하기 위해 Spark 설정 시 다음 옵션이 중요합니다. (write_table.py 참고)
+- MinIO를 로컬 S3로 사용하기 위해 Spark 설정 시 다음 옵션이 중요합니다. (test.py 참고)
 
 - Path Style Access: true로 설정해야 DNS 해결 오류 없이 localhost 도메인을 사용할 수 있습니다.
 
@@ -85,7 +87,7 @@ docker compose up -d
 - Warehouse Path: `s3a://` 프로토콜을 사용합니다.
 
   ```python
-  .config("spark.sql.catalog.local.warehouse", "s3a://iceberg-bucket/iceberg_warehouse")
+  .config("spark.sql.catalog.local.warehouse", "s3a://datalake/iceberg-warehouse")
   ```
 
 ### 사용자 생성

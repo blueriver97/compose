@@ -19,49 +19,90 @@ Nginx 컨테이너: 6시간마다 설정을 리로드하여 갱신된 인증서�
 
 ### Nginx 설정
 
-- `example.ddns.net` 값을 실제 도메인으로 교체합니다.
+- [.env](.env) 파일에서 SERVER_NAME 변수에 도메인을 작성합니다. (예: `example.ddns.net`)
+- default.conf.template으로부터 SERVER_NAME 값을 치환해 생성합니다.
+- 값 치환은 command 영역에 작성된 명령어를 통해 수행됩니다.
 
 ```plantext
 server {
     listen 80;
-    server_name example.ddns.net; # [수정 필요] 본인의 도메인 입력
+    listen [::]:80;
     server_tokens off;
 
-    # Let's Encrypt 인증서 발급을 위한 챌린지 경로
+    server_name ${SERVER_NAME};
+
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
 
-    # 그 외 모든 요청은 HTTPS로 리다이렉트
     location / {
         return 301 https://$host$request_uri;
     }
 }
 
 server {
-    listen 443 ssl;
-    server_name example.ddns.net; # [수정 필요] 본인의 도메인 입력
+    listen 443 ssl; # managed by Certbot
+    listen [::]:443 ssl ipv6only=on; # managed by Certbot
     server_tokens off;
 
-    # SSL 인증서 경로 (init 스크립트로 생성됨)
-    ssl_certificate /etc/letsencrypt/live/example.ddns.net/fullchain.pem; # [수정 필요]
-    ssl_certificate_key /etc/letsencrypt/live/example.ddns.net/privkey.pem; # [수정 필요]
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    server_name ${SERVER_NAME}; # managed by Certbot
 
+    root /var/www/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    ssl_certificate /etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME}/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+    include /etc/nginx/include.d/*.conf;
     location / {
-        # 예시: 내부의 다른 서비스로 프록시 (필요시 수정)
         root /usr/share/nginx/html;
         index index.html;
-
         # proxy_pass http://my-web-app:3000;
     }
 }
 ```
 
+### 모듈형 설정 관리
+
+Nginx 설정을 유연하게 확장할 수 있도록 모듈형 구조를 지원합니다. default.conf.template 파일 내부에 include /etc/nginx/include.d/\*.conf; 구문이 포함되어 있어,
+별도의 메인 설정 수정 없이 새로운 서비스를 추가할 수 있습니다.
+
+- 설정 방법
+  platform/nginx-certbot/data/include/ 디렉토리에 .conf 확장자로 설정 파일을 배치합니다.
+  Nginx 컨테이너 실행 시 해당 디렉토리의 모든 설정 파일이 HTTPS(443) 서버 블록 내부에 자동으로 포함됩니다.
+  메인 템플릿 파일을 건드리지 않고도 서비스별로 프록시 설정을 격리하여 관리할 수 있어 유지보수성이 향상됩니다.
+
+  ```editorconfig
+  # 서비스 프록시 연동 예시 (MinIO)
+  location /minio {
+      rewrite ^/minio/(.*) /$1 break;
+
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+
+      proxy_pass http://minio-server:9001;
+  }
+  ```
+
+  - minio.conf는 /minio 경로로 들어오는 요청을 내부 minio-server:9001로 전달하며, WebSocket 통신을 위한 Upgrade 헤더 설정을 포함하고 있습니다.
+  - 프록시를 통해 접근할 경우, MinIO 서버가 올바른 리다이렉션 경로를 인지할 수 있도록 `MINIO_BROWSER_REDIRECT_URL`을 설정해야 합니다.
+
+- 설정 적용
+  ```bash
+  docker exec nginx nginx -s reload
+  ```
+
 ### 초기화 스크립트 실행
 
-- 최초 실행 시 인증서가 없어 Nginx가 시작되지 않을 때, 인증서 발급하는 스크립트입니다.
+- 인증서를 발급하는 스크립트입니다.
 - 도메인과 이메일 주소를 `init-letsencrypt.sh`에 추가합니다.
 
 ```bash

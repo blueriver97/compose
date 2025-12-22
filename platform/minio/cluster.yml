@@ -83,9 +83,9 @@ services:
   # ---------------------------------------------------------------------------
   # 초기화 작업 (버킷 생성)
   # ---------------------------------------------------------------------------
-  minio_mc:
+  minio-mc:
     image: minio/mc
-    container_name: minio_mc
+    container_name: minio-mc
     depends_on:
       - minio1
       - minio2
