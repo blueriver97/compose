@@ -19,99 +19,16 @@ Nginx 컨테이너: 6시간마다 설정을 리로드하여 갱신된 인증서�
 
 ### Nginx 설정
 
-- [.env](.env) 파일에서 환경 변수를 작성합니다.
-  - DOMAIN: `example.ddns.net`
-  - CERT_PATH: `example.ddns.net`(Prod), `example.ddns.net-0001`(Staging)
-- \*.conf.template으로부터 환경변수 값을 치환한 후 /etc/nginx/conf.d 아래 설정을 생성합니다.
-- 값 치환은 command 영역에 작성된 명령어를 통해 수행됩니다.
+1. [.env](.env) 파일에서 DOMAIN 환경 변수를 작성합니다. (예: example.ddns.net)
+2. \*.conf.template으로부터 환경변수 값을 치환한 후 /etc/nginx/conf.d 아래 설정을 생성합니다.
+3. 값 치환은 command 영역에 작성된 명령어를 통해 수행됩니다.
+4. 이후 추가할 서비스에 따라 이래 명령으로 config를 추가합니다.
 
-  ```bash
-      for template in /etc/nginx/template/*.template; do
-        filename=$$(basename \"$$template\" .template)
-        envsubst $${DOMAIN} < \"$$template\" > \"/etc/nginx/conf.d/$${filename}.conf\"
-      done
-  ```
-
-  ```
-    docker exec nginx envsubst $${DOMAIN} < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf
-    docker exec nginx envsubst $${DOMAIN} < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf
-  ```
-
-```plantext
-server {
-    listen 80;
-    listen [::]:80;
-    server_tokens off;
-
-    server_name ${DOMAIN};
-
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-
-    location / {
-        return 301 https://$host$request_uri;
-    }
-}
-
-server {
-    listen 443 ssl; # managed by Certbot
-    listen [::]:443 ssl; # managed by Certbot
-    server_tokens off;
-
-    server_name ${DOMAIN}; # managed by Certbot
-
-    root /var/www/html;
-    index index.html index.htm index.nginx-debian.html;
-
-    ssl_certificate /etc/letsencrypt/live/${CERT_PATH}/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/${CERT_PATH}/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-
-    location / {
-        root /usr/share/nginx/html;
-        index index.html;
-        # proxy_pass http://my-web-app:3000;
-    }
-}
-```
-
-### 모듈형 설정 관리 (Legacy)
-
-Nginx 설정을 유연하게 확장할 수 있도록 모듈형 구조를 지원합니다. default.conf.template 파일 내부에 include /etc/nginx/include.d/\*.conf; 구문이 포함되어 있어,
-별도의 메인 설정 수정 없이 새로운 서비스를 추가할 수 있습니다.
-
-- 설정 방법
-  platform/nginx-certbot/data/include/ 디렉토리에 .conf 확장자로 설정 파일을 배치합니다.
-  Nginx 컨테이너 실행 시 해당 디렉토리의 모든 설정 파일이 HTTPS(443) 서버 블록 내부에 자동으로 포함됩니다.
-  메인 템플릿 파일을 건드리지 않고도 서비스별로 프록시 설정을 격리하여 관리할 수 있어 유지보수성이 향상됩니다.
-
-  ```plantext
-  # 서비스 프록시 연동 예시 (MinIO)
-  location /minio {
-      rewrite ^/minio/(.*) /$1 break;
-
-      proxy_set_header Host $host;
-      proxy_set_header X-Real-IP $remote_addr;
-      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-      proxy_set_header X-Forwarded-Proto $scheme;
-
-      proxy_http_version 1.1;
-      proxy_set_header Upgrade $http_upgrade;
-      proxy_set_header Connection "upgrade";
-
-      proxy_pass http://minio-server:9001;
-  }
-  ```
-
-  - minio.conf는 /minio 경로로 들어오는 요청을 내부 minio-server:9001로 전달하며, WebSocket 통신을 위한 Upgrade 헤더 설정을 포함하고 있습니다.
-  - 프록시를 통해 접근할 경우, MinIO 서버가 올바른 리다이렉션 경로를 인지할 수 있도록 `MINIO_BROWSER_REDIRECT_URL`을 설정해야 합니다.
-
-- 설정 적용
-  ```bash
+```bash
+  docker exec nginx envsubst $${DOMAIN} < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf
+  docker exec nginx envsubst $${DOMAIN} < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf
   docker exec nginx nginx -s reload
-  ```
+```
 
 ### 초기화 스크립트 실행
 
