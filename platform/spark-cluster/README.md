@@ -261,6 +261,33 @@ Exception in thread "main" java.lang.NoSuchMethodError: 'java.lang.Object org.ap
 - 이 값을 SYSTEM_ERR에서 SYSTEM_OUT으로 변경할 경우, Spark 작업 로그가 stdout 채널에 출력된다.
 - 이렇게 설정된 이유를 추측해보면, 사용자가 print() 함수 등으로 직접 출력하는 내용을 stdout에 보여주고, 그 외 작업 로그를 stderr로 전달해서 용도를 분리하려는게 아닐까 싶다.
 
+### 8. PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+
+- Java 애플리케이션이 외부 서버와 HTTPS 통신을 할 때 발생하는 문제로, 서버가 제시한 SSL 인증서를 Java의 신뢰 저장소(Truststore)에서 검증할 수 없어서 발생하는 보안 예외이다.
+- 검증되지 않은 인증서 및 자체 서명 인증서를 사용하거나 사내 프록시나 방화벽이 SSL 트래픽을 가로채기 위해 중간 인증서를 삽입하면서 발생될 수 있다.
+- 가장 권장되는 해결책은 문제가 되는 해당 인증서(root CA 인증서, Intermediate 인증서)를 Java의 cacerts 파일에 추가하는 것이다.
+- [setup.sh](config/setup.sh) 내용 참조
+  ```bash
+  echo "INFO: Registering Staging SSL Certificate..."
+  STAGING_CERT_PATH="/tmp/ssl/letsencrypt-stg-root-x1.pem" # 실제 경로에 맞춰 수정 필요
+  TRUSTSTORE_PATH="$JAVA_HOME/lib/security/cacerts"
+  CERT_ALIAS="letsencrypt-staging-root"
+  if [ -f "$STAGING_CERT_PATH" ]; then
+      # 인증서가 이미 Java Truststore에 등록되어 있는지 확인
+      keytool -list -keystore "$TRUSTSTORE_PATH" -storepass changeit -alias "$CERT_ALIAS" > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+          echo "INFO: SSL Certificate '$CERT_ALIAS' already exists in truststore."
+      else
+          # 인증서 등록 수행 (관리자 권한 필요)
+          keytool -importcert -trustcacerts -keystore "$TRUSTSTORE_PATH" \
+                  -storepass changeit -alias "$CERT_ALIAS" -file "$STAGING_CERT_PATH" -noprompt
+          echo "INFO: SSL Certificate '$CERT_ALIAS' has been successfully registered."
+      fi
+  else
+      echo "WARN: Staging certificate file not found at $STAGING_CERT_PATH. Skipping registration."
+  fi
+  ```
+
 ---
 
 ## Appendix

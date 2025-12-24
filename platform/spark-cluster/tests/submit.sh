@@ -6,4 +6,4 @@
   --executor-memory 2G \
   --driver-memory 2G \
   --conf spark.yarn.maxAppAttempts=1 \
-  test_iceberg_glue_catalog.py
+  test_iceberg_polaris_catalog.py

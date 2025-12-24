@@ -17,6 +17,8 @@ x-cluster-common: &cluster-common
   extra_hosts:
     - host.docker.internal:host-gateway
   volumes:
+    # Staging SSL 인증서 사용 시
+    # - ../nginx-certbot/ssl:/tmp/ssl
     # Glue Catalog & S3 조합 사용 시 아래 주석 해제 (Spark 인증 체인)
     # - $HOME/.aws:/root/.aws
     - ./config/setup.sh:/root/setup.sh
