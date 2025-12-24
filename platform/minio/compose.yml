@@ -6,7 +6,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_STS_SECURE: "true"
+      # MINIO_STS_SECURE: "true"
       # 설정 시 도메인으로만 접속 가능함. IP로 접속 불가
       # MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL}
     restart: always
