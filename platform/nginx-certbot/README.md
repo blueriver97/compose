@@ -25,8 +25,8 @@ Nginx 컨테이너: 6시간마다 설정을 리로드하여 갱신된 인증서�
 4. 이후 추가할 서비스에 따라 이래 명령으로 config를 추가합니다.
 
 ```bash
-  docker exec nginx envsubst $${DOMAIN} < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf
-  docker exec nginx envsubst $${DOMAIN} < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf
+  docker exec nginx bash -c "envsubst '\${DOMAIN}' < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf"
+  docker exec nginx bash -c "envsubst '\${DOMAIN}' < /etc/nginx/template/polaris.conf.template > /etc/nginx/conf.d/polaris.conf"
   docker exec nginx nginx -s reload
 ```
 
