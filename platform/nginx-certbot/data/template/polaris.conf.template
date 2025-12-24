@@ -3,7 +3,7 @@ server {
     listen [::]:80;
     server_tokens off;
 
-    server_name ${DOMAIN};
+    server_name polaris.${DOMAIN};
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -16,10 +16,10 @@ server {
 
 server {
     listen 443 ssl; # managed by Certbot
-    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen [::]:443 ssl; # managed by Certbot
     server_tokens off;
 
-    server_name ${DOMAIN}; # managed by Certbot
+    server_name polaris.${DOMAIN}; # managed by Certbot
 
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
@@ -30,7 +30,7 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
     # 공통 헤더 설정
-    proxy_set_header Host $host;
+    proxy_set_header Host $http_host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -38,7 +38,6 @@ server {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 
-    include /etc/nginx/include.d/*.conf;
     location / {
         root /usr/share/nginx/html;
         index index.html;

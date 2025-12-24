@@ -19,9 +19,14 @@ Nginx 컨테이너: 6시간마다 설정을 리로드하여 갱신된 인증서�
 
 ### Nginx 설정
 
-- [.env](.env) 파일에서 SERVER_NAME 변수에 도메인을 작성합니다. (예: `example.ddns.net`)
-- default.conf.template으로부터 SERVER_NAME 값을 치환해 생성합니다.
+- [.env](.env) 파일에서 환경 변수를 작성합니다.
+  - DOMAIN: `example.ddns.net`
+  - CERT_PATH: `example.ddns.net`(Prod), `example.ddns.net-0001`(Staging)
+- \*.conf.template으로부터 환경변수 값을 치환한 후 /etc/nginx/conf.d 아래 설정을 생성합니다.
 - 값 치환은 command 영역에 작성된 명령어를 통해 수행됩니다.
+  ```bash
+
+  ```
 
 ```plantext
 server {
@@ -29,7 +34,7 @@ server {
     listen [::]:80;
     server_tokens off;
 
-    server_name ${SERVER_NAME};
+    server_name ${DOMAIN};
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -42,20 +47,19 @@ server {
 
 server {
     listen 443 ssl; # managed by Certbot
-    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen [::]:443 ssl; # managed by Certbot
     server_tokens off;
 
-    server_name ${SERVER_NAME}; # managed by Certbot
+    server_name ${DOMAIN}; # managed by Certbot
 
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
 
-    ssl_certificate /etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME}/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/${CERT_PATH}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/${CERT_PATH}/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
-    include /etc/nginx/include.d/*.conf;
     location / {
         root /usr/share/nginx/html;
         index index.html;
@@ -64,7 +68,7 @@ server {
 }
 ```
 
-### 모듈형 설정 관리
+### 모듈형 설정 관리 (Legacy)
 
 Nginx 설정을 유연하게 확장할 수 있도록 모듈형 구조를 지원합니다. default.conf.template 파일 내부에 include /etc/nginx/include.d/\*.conf; 구문이 포함되어 있어,
 별도의 메인 설정 수정 없이 새로운 서비스를 추가할 수 있습니다.
@@ -74,7 +78,7 @@ Nginx 설정을 유연하게 확장할 수 있도록 모듈형 구조를 지원�
   Nginx 컨테이너 실행 시 해당 디렉토리의 모든 설정 파일이 HTTPS(443) 서버 블록 내부에 자동으로 포함됩니다.
   메인 템플릿 파일을 건드리지 않고도 서비스별로 프록시 설정을 격리하여 관리할 수 있어 유지보수성이 향상됩니다.
 
-  ```editorconfig
+  ```plantext
   # 서비스 프록시 연동 예시 (MinIO)
   location /minio {
       rewrite ^/minio/(.*) /$1 break;
@@ -104,9 +108,11 @@ Nginx 설정을 유연하게 확장할 수 있도록 모듈형 구조를 지원�
 
 - 인증서를 발급하는 스크립트입니다.
 - 도메인과 이메일 주소를 `init-letsencrypt.sh`에 추가합니다.
+- No-IP를 사용하는 경우, `*.example.ddns.net` 방식의 Wildcard 방식은 사용할 수 없습니다.
+- 명시적으로 서브도메인을 추가해야 발급된 인증서에서 여러 도메인을 같이 처리할 수 있습니다.
 
 ```bash
-domains=(example.ddns.net) # 본인의 도메인
+domains=(example.ddns.net subdomain.example.ddns.net) # 본인의 도메인
 email="your-email@example.com" # 본인의 이메일
 staging=0 # 테스트 시 1, 실제 발급 시 0
 ```

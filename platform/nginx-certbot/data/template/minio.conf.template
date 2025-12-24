@@ -1,0 +1,62 @@
+server {
+    listen 80;
+    listen [::]:80;
+    server_tokens off;
+
+    server_name minio.${DOMAIN};
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_tokens off;
+    server_name minio.${DOMAIN};
+
+    # SSL 설정
+    ssl_certificate /etc/letsencrypt/live/${CERT_PATH}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${CERT_PATH}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # [중요] 대용량 파일 업로드를 위한 설정
+    client_max_body_size 0; # 용량 제한 해제 (MinIO 자체 설정에 따름)
+    proxy_buffering off;    # 스토리지 스트리밍 시 버퍼링 비활성화로 지연 시간 감소
+    proxy_request_buffering off; # 요청 버퍼링 비활성화 (멀티파트 업로드 시 필수)
+
+    # 타임아웃 최적화 (대용량 파일 처리 고려)
+    proxy_connect_timeout 300;
+    proxy_read_timeout    300;
+    proxy_send_timeout    300;
+
+    # 공통 헤더 설정
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
+    # MinIO API (S3 API)
+    location / {
+        proxy_pass http://minio-server:9000;
+    }
+
+    # MinIO Console (UI)
+    # rewrite 대신 trailing slash와 정확한 매칭을 통한 제어
+    location /console/ {
+        rewrite ^/console/(.*) /$1 break;
+        proxy_pass http://minio-server:9001;
+
+        # UI 접속 시 chunked encoding 관련 문제 방지
+        chunked_transfer_encoding off;
+    }
+}
