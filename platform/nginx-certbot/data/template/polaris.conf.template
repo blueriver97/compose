@@ -39,8 +39,8 @@ server {
     proxy_set_header Connection "upgrade";
 
     location / {
-        root /usr/share/nginx/html;
-        index index.html;
-        # proxy_pass http://my-web-app:3000;
+        # root /usr/share/nginx/html;
+        # index index.html;
+        proxy_pass http://polaris:8181;
     }
 }
