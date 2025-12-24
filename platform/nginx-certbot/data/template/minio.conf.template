@@ -18,11 +18,12 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
     server_tokens off;
+
     server_name minio.${DOMAIN};
 
     # SSL 설정
-    ssl_certificate /etc/letsencrypt/live/${CERT_PATH}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${CERT_PATH}/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 

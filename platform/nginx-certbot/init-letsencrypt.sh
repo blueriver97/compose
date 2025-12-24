@@ -9,7 +9,7 @@ domains=(example.ddns.net)
 rsa_key_size=4096
 data_path="./data/certbot"
 email="your-email@example.com" # Adding a valid address is strongly recommended
-staging=0 # Set to 1 if you're testing your setup to avoid hitting request limits
+staging=1 # Set to 1 if you're testing your setup to avoid hitting request limits
 
 if [ -d "$data_path" ]; then
   read -p "Existing data found for $domains. Continue and replace existing certificate? (y/N) " decision
@@ -49,7 +49,6 @@ docker-compose run --rm --entrypoint "\
   rm -Rf /etc/letsencrypt/renewal/$domains.conf" certbot
 echo
 
-
 echo "### Requesting Let's Encrypt certificate for $domains ..."
 #Join $domains to -d args
 domain_args=""
@@ -71,8 +70,10 @@ docker-compose run --rm --entrypoint "\
     $staging_arg \
     $email_arg \
     $domain_args \
+    --cert-name $domains \
     --rsa-key-size $rsa_key_size \
     --agree-tos \
+    --no-eff-email \
     --force-renewal" certbot
 echo
 

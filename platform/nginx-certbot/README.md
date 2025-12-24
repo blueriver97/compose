@@ -24,8 +24,17 @@ Nginx 컨테이너: 6시간마다 설정을 리로드하여 갱신된 인증서�
   - CERT_PATH: `example.ddns.net`(Prod), `example.ddns.net-0001`(Staging)
 - \*.conf.template으로부터 환경변수 값을 치환한 후 /etc/nginx/conf.d 아래 설정을 생성합니다.
 - 값 치환은 command 영역에 작성된 명령어를 통해 수행됩니다.
-  ```bash
 
+  ```bash
+      for template in /etc/nginx/template/*.template; do
+        filename=$$(basename \"$$template\" .template)
+        envsubst $${DOMAIN} < \"$$template\" > \"/etc/nginx/conf.d/$${filename}.conf\"
+      done
+  ```
+
+  ```
+    docker exec nginx envsubst $${DOMAIN} < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf
+    docker exec nginx envsubst $${DOMAIN} < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf
   ```
 
 ```plantext

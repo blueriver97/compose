@@ -16,7 +16,7 @@ server {
 
 server {
     listen 443 ssl; # managed by Certbot
-    listen [::]:443 ssl ipv6only=on; # managed by Certbot
+    listen [::]:443 ssl; # managed by Certbot
     server_tokens off;
 
     server_name ${DOMAIN}; # managed by Certbot
@@ -24,8 +24,8 @@ server {
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
 
-    ssl_certificate /etc/letsencrypt/live/${CERT_PATH}/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/${CERT_PATH}/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
