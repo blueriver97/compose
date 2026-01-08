@@ -288,6 +288,34 @@ Exception in thread "main" java.lang.NoSuchMethodError: 'java.lang.Object org.ap
   fi
   ```
 
+### 9. Concurrent update to the log. Multiple streaming jobs detected for <offset_number>.
+
+```plain
+checkpoint/
+├── offsets/      # 각 배치에서 읽기로 결정한 오프셋 로그 (WAL)
+│   ├── 0
+│   ├── 1
+│   └── 284       # 현재 문제가 된 그 파일
+├── commits/      # 처리가 완료된 배치 목록
+│   ├── 0
+│   ├── 1
+│   └── 283       # 284가 여기 없으면 재처리 대상, 만약 이미 284가 있다면 [CONCURRENT_STREAM_LOG_UPDATE] 오류 발생
+├── metadata      # Query ID 등 쿼리 고유 정보
+└── sources/      # Kafka 특정 정보 (Topic, Partition 수 등)
+```
+
+- Kafka에서 메시지를 읽어 Spark Streaming으로 처리할 때 발생하는 오류로, offset과 commit의 시퀀스 불일치가 주요 원인이다.
+- **배치 시작 단계**: Spark는 Kafka에서 읽어올 시작 오프셋과 종료 오프셋을 결정한다. 이 정보는 체크포인트 디렉토리의 `offsets/` 폴더에 배치 번호(예: 284)로 기록된다.
+- **데이터 처리 단계**: 설정된 오프셋 범위만큼 Kafka에서 데이터를 가져와 변환 작업을 수행한 후 저장소에 저장한다. 저장이 완료되면 `commits/` 폴더에 동일한 배치 번호(284) 파일을 생성하여 처리 완료를 표시한다.
+- **오류 발생 조건**: `offsets/`에 기록되지 않은 배치 번호가 `commits/`에만 존재할 경우 이 오류가 발생한다. 이는 동일한 배치에 대해 중복된 스트리밍 작업이 감지되었음을 의미한다.
+- **재처리 메커니즘**: `offsets/`에는 존재하지만 `commits/`에는 없는 배치의 경우, Spark는 해당 오프셋 구간을 재처리하고 완료 후 `commits/`에 기록한다.
+
+```plain
+26/01/08 17:07:22 ERROR MicroBatchExecution: Query [id = 28c7b2a1-b805-4575-8235-82e741ad1b7f, runId = af193f90-c6f8-4387-ab1e-805685f11630] terminated with error
+org.apache.spark.SparkException: [CONCURRENT_STREAM_LOG_UPDATE] Concurrent update to the log. Multiple streaming jobs detected for 284.
+Please make sure only one streaming job runs on a specific checkpoint location at a time. SQLSTATE: 40000
+```
+
 ---
 
 ## Appendix
