@@ -1,8 +1,8 @@
 database:
   host: "localhost"
   port: 3306 # 1433
-  user: ""
-  password: ""
+  user: "root"
+  password: "mysql"
   database: "store"
   autocommit: false
 
