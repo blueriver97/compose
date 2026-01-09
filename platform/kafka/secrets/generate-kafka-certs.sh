@@ -29,9 +29,22 @@ generate_node_cert() {
     # CSR (인증서 서명 요청) 생성
     keytool -keystore $KEYSTORE -certreq -file $NODE_NAME.csr -alias $NODE_NAME -storepass $PASS
 
-    # CA를 사용하여 CSR 서명
+    # SAN 정보를 담은 확장 파일 생성
+    cat > $NODE_NAME.ext <<EOF
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = $NODE_NAME
+DNS.2 = localhost
+EOF
+
+    # CA를 사용하여 CSR 서명 (확장 파일 포함)
     openssl x509 -req -CA ca-cert.pem -CAkey ca-key.pem -in $NODE_NAME.csr \
-        -out $NODE_NAME-ca-signed.crt -days $VALIDITY -CAcreateserial
+        -out $NODE_NAME-ca-signed.crt -days $VALIDITY -CAcreateserial -extfile $NODE_NAME.ext
 
     # CA 인증서를 Keystore에 가져오기 (인증 체인 구성)
     keytool -keystore $KEYSTORE -alias CARoot -import -file ca-cert.pem -storepass $PASS -noprompt
@@ -40,15 +53,12 @@ generate_node_cert() {
     keytool -keystore $KEYSTORE -alias $NODE_NAME -import -file $NODE_NAME-ca-signed.crt -storepass $PASS -noprompt
 
     # 임시 CSR 파일 삭제
-    rm $NODE_NAME.csr $NODE_NAME-ca-signed.crt
+    rm $NODE_NAME.csr $NODE_NAME-ca-signed.crt *.ext
 }
 
 # 4. 각 노드별 인증서 생성 (Controller, Broker)
 generate_node_cert "controller"
 generate_node_cert "broker"
 generate_node_cert "client"
-
-# 5. 클라이언트용 Truststore 복사 (구분 편의성)
-# cp truststore.jks client.truststore.jks
 
 echo "All certificates generated"

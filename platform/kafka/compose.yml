@@ -20,7 +20,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      # JMX 활성화
+    # JMX 활성화
     #      KAFKA_OPTS: >-
     #        -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
     #        -javaagent:/etc/kafka/jmx_exporter/jmx_prometheus_javaagent-1.4.0.jar=7071:/etc/kafka/jmx_exporter/kafka-jmx-config.yaml
@@ -34,7 +34,6 @@ services:
       - 9093:9093
     volumes:
       - ./jaas/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
-      - ./jmx-exporter:/etc/kafka/jmx_exporter
       - ./secrets/controller.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
       - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
 
@@ -135,7 +134,7 @@ services:
     ports:
       - 8081:8081
     volumes:
-      - ./secrets/broker.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/client.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
       - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
 
   src-connect:
@@ -169,6 +168,20 @@ services:
       CONNECT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
       CONNECT_SSL_KEYSTORE_PASSWORD: changeit
       CONNECT_SSL_KEY_PASSWORD: changeit
+      # Producer SSL 설정
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SSL
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_PRODUCER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_PRODUCER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_PRODUCER_SSL_KEY_PASSWORD: changeit
+      # Consumer SSL 설정
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
     depends_on:
       broker:
         condition: service_started
@@ -218,6 +231,20 @@ services:
       CONNECT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
       CONNECT_SSL_KEYSTORE_PASSWORD: changeit
       CONNECT_SSL_KEY_PASSWORD: changeit
+      # Producer SSL 설정
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SSL
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_PRODUCER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_PRODUCER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_PRODUCER_SSL_KEY_PASSWORD: changeit
+      # Consumer SSL 설정
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
     depends_on:
       broker:
         condition: service_started
@@ -236,6 +263,37 @@ services:
       - ./connect-plugins/sink:/usr/local/share/kafka/plugins
       - $HOME/.aws:/home/appuser/.aws
 
+  kafbat-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    container_name: kafbat-ui
+    restart: always
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kraft-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:19092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+      DYNAMIC_CONFIG_ENABLED: true
+      # 커넥터 설정
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: source-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://src-connect:8083
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_NAME: sink-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_ADDRESS: http://sink-connect:8083
+      # SSL 설정
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: SSL
+      # KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM: SCRAM-SHA-256
+      # KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="admin" password="admin-secret";'
+      KAFKA_CLUSTERS_0_SSL_VERIFYSSL: false
+      KAFKA_CLUSTERS_0_SSL_TRUSTSTORELOCATION: /etc/kafka/secrets/truststore.jks
+      KAFKA_CLUSTERS_0_SSL_TRUSTSTOREPASSWORD: changeit
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/client.keystore.jks
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_PASSWORD: changeit
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEY_PASSWORD: changeit
+    networks:
+      - default
+    ports:
+      - 8080:8080
+    volumes:
+      - ./secrets/client.keystore.jks:/etc/kafka/secrets/client.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
 networks:
   default:
     driver: bridge
