@@ -4,10 +4,10 @@ services:
     container_name: mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: __ROOT_PASSWORD__
-      MYSQL_DATABASE: __DATABASE__
-      MYSQL_USER: __USER__
-      MYSQL_PASSWORD: __PASSWORD__
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     networks:
       - default
     ports:

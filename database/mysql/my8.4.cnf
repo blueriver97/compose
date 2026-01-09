@@ -18,6 +18,8 @@
 # sort_buffer_size = 2M
 # read_rnd_buffer_size = 2M
 
+authentication_policy=caching_sha2_password
+
 host-cache-size=0
 skip-name-resolve
 datadir=/var/lib/mysql
