@@ -1,0 +1,5 @@
+connect-plugins/sink/*
+connect-plugins/source/*
+secrets/*.srl
+secrets/*.pem
+secrets/*.jks

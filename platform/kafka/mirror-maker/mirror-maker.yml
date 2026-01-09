@@ -1,0 +1,56 @@
+services:
+  mirror-maker:
+    image: confluentinc/cp-kafka:latest
+    container_name: mirror-maker
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@mirror-maker:9093
+      KAFKA_LISTENERS: INTERNAL://mirror-maker:19092,EXTERNAL://0.0.0.0:9092,CONTROLLER://mirror-maker:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://mirror-maker:19092,EXTERNAL://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+      CLUSTER_ID: OBceJp_GT8KTfxOK6fg4RQ
+    networks:
+      - default
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+  mirror-connect:
+    image: confluentinc/cp-kafka-connect:latest
+    container_name: mirror-connect
+    restart: always
+    environment:
+      # https://docs.confluent.io/platform/current/connect/references/allconfigs.html#common-worker-configuration
+      CONNECT_BOOTSTRAP_SERVERS: mirror-maker:19092
+      CONNECT_REST_PORT: 8083
+      CONNECT_GROUP_ID: mirror-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: mirror-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: mirror-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: mirror-connect-status
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      #CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      #CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_REST_ADVERTISED_HOST_NAME: mirror-connect
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/local/share/kafka/plugins
+    networks:
+      - default
+    volumes:
+      - ./plugins/source:/usr/local/share/kafka/plugins
+    depends_on:
+      - mirror-maker
+
+networks:
+  default:
+    driver: bridge
+    name: service-network

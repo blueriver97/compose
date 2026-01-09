@@ -1,0 +1,16 @@
+{
+  "name": "mm2",
+  "connector.class": "org.apache.kafka.connect.mirror.MirrorSourceConnector",
+  "source.cluster.alias": "source",
+  "target.cluster.alias": "target",
+  "source.cluster.bootstrap.servers": "kafka1:19092",
+  "target.cluster.bootstrap.servers": "mirror-maker:19092",
+  "sync.topic.acls.enabled": "false",
+  "sync.topic.configs.enabled": "true",
+  "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+  "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+  "tasks.max": "1",
+  "topics": "json.*",
+  "replication.factor": "1",
+  "replication.policy.class": "org.apache.kafka.connect.mirror.IdentityReplicationPolicy"
+}

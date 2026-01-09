@@ -1,0 +1,42 @@
+startDelaySeconds: 60
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+
+# 컨트롤러에 불필요한 브로커 데이터 처리 지표 제외 (리소스 절약)
+blacklistObjectNames:
+  - "kafka.server:type=BrokerTopicMetrics,*"
+  - "kafka.log:*"
+  - "kafka.network:type=RequestMetrics,*"
+  - "kafka.consumer:*"
+  - "kafka.producer:*"
+
+rules:
+  # [핵심] 활성 컨트롤러 여부 (클러스터 내 단 하나여야 함)
+  - pattern: "kafka.controller<type=KafkaController, name=ActiveControllerCount><>Value"
+    name: kafka_controller_activecontrollercount
+    type: GAUGE
+
+  # [핵심] KRaft 쿼럼 상태 (리더 존재 여부 및 Voter 간 지연)
+  - pattern: "kafka.server<type=MetadataQuorum, name=(.+)><>Value"
+    name: kafka_server_metadataquorum_$1
+    type: GAUGE
+
+  # [핵심] 메타데이터 오프셋 지연 (브로커와의 동기화 상태 확인용)
+  - pattern: "kafka.metadata<type=(.+), name=(.+)><>Value"
+    name: kafka_metadata_$1_$2
+    type: GAUGE
+
+  # KRaft Raft Metrics (에포크 상태 및 레코드 추가 속도)
+  - pattern: "kafka.raft<type=raft-metrics, name=(.+)><>Value"
+    name: kafka_raft_metrics_$1
+    type: GAUGE
+
+  # 컨트롤러 이벤트 큐 처리 지연 시간
+  - pattern: "kafka.controller<type=ControllerEventManager, name=(.+)><>(Count|OneMinuteRate)"
+    name: kafka_controller_eventmanager_$1
+    type: GAUGE
+
+  # JVM 기본 지표 (Memory, GC) - 모든 노드 공통 필수
+  - pattern: "java.lang<type=Memory><HeapMemoryUsage>used"
+    name: java_memory_heap_used
+    type: GAUGE

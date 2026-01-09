@@ -20,6 +20,10 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      # JMX 활성화
+    #      KAFKA_OPTS: >-
+    #        -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+    #        -javaagent:/etc/kafka/jmx_exporter/jmx_prometheus_javaagent-1.4.0.jar=7071:/etc/kafka/jmx_exporter/kafka-jmx-config.yaml
     healthcheck:
       test: ["CMD-SHELL", "nc -z controller 9093 || exit 1"]
       interval: 5s
@@ -29,6 +33,8 @@ services:
     ports:
       - 9093:9093
     volumes:
+      - ./jaas/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+      - ./jmx-exporter:/etc/kafka/jmx_exporter
       - ./secrets/controller.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
       - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
 
@@ -131,6 +137,104 @@ services:
     volumes:
       - ./secrets/broker.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
       - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+
+  src-connect:
+    image: confluentinc/cp-kafka-connect:${KAFKA_VERSION}
+    hostname: src-connect
+    container_name: src-connect
+    environment:
+      # https://docs.confluent.io/platform/current/connect/references/allconfigs.html#common-worker-configuration
+      CONNECT_BOOTSTRAP_SERVERS: broker:19092
+      CONNECT_GROUP_ID: src-connect-cluster
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_CONFIG_STORAGE_TOPIC: src-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: src-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: src-connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_REST_ADVERTISED_HOST_NAME: src-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_TOPIC_CREATION_ENABLE: true
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/local/share/kafka/plugins
+      # SSL 설정
+      CONNECT_SECURITY_PROTOCOL: SSL
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEY_PASSWORD: changeit
+    depends_on:
+      broker:
+        condition: service_started
+        required: true
+      schema-registry:
+        condition: service_started
+        required: true
+    restart: always
+    networks:
+      - default
+    ports:
+      - 18083:8083
+    volumes:
+      - ./secrets/client.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+      - ./connect-plugins/source:/usr/local/share/kafka/plugins
+      - $HOME/.aws:/home/appuser/.aws
+
+  sink-connect:
+    image: confluentinc/cp-kafka-connect:${KAFKA_VERSION}
+    hostname: sink-connect
+    container_name: sink-connect
+    environment:
+      # https://docs.confluent.io/platform/current/connect/references/allconfigs.html#common-worker-configuration
+      CONNECT_BOOTSTRAP_SERVERS: broker:19092
+      CONNECT_GROUP_ID: sink-connect-cluster
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_CONFIG_STORAGE_TOPIC: sink-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: sink-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: sink-connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_REST_ADVERTISED_HOST_NAME: sink-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_TOPIC_CREATION_ENABLE: true
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/local/share/kafka/plugins
+      # SSL 설정
+      CONNECT_SECURITY_PROTOCOL: SSL
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEY_PASSWORD: changeit
+    depends_on:
+      broker:
+        condition: service_started
+        required: true
+      schema-registry:
+        condition: service_started
+        required: true
+    restart: always
+    networks:
+      - default
+    ports:
+      - 28083:8083
+    volumes:
+      - ./secrets/client.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+      - ./connect-plugins/sink:/usr/local/share/kafka/plugins
+      - $HOME/.aws:/home/appuser/.aws
 
 networks:
   default:
