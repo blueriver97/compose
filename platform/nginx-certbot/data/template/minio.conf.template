@@ -48,6 +48,7 @@ server {
     # valid=30s는 DNS 결과를 30초 동안 캐싱하여 성능을 최적화함
     resolver 127.0.0.11 valid=60s;
 
+
     # MinIO API (S3 API)
     location / {
         set $upstream_minio http://minio-server:9000;
@@ -58,7 +59,7 @@ server {
     # rewrite 대신 trailing slash와 정확한 매칭을 통한 제어
     location /console/ {
         set $upstream_minio_console http://minio-server:9001;
-        rewrite ^/console/(.*) /$1 break;
+        rewrite ^/console/(.*)$ /$1 break;
 
         # UI 접속 시 chunked encoding 관련 문제 방지
         chunked_transfer_encoding off;

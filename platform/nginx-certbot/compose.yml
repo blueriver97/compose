@@ -7,10 +7,10 @@ services:
       DOMAIN: ${DOMAIN}
     command: |
       /bin/sh -c "
-      envsubst '$$SERVER_NAME' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf \
-      envsubst '$$SERVER_NAME' < /etc/nginx/templates/minio.conf.template > /etc/nginx/conf.d/minio.conf \
-      envsubst '$$SERVER_NAME' < /etc/nginx/templates/polaris.conf.template > /etc/nginx/conf.d/polaris.conf \
-      envsubst '$$SERVER_NAME' < /etc/nginx/templates/trino.conf.template > /etc/nginx/conf.d/trino.conf \
+      envsubst '$$DOMAIN' < /etc/nginx/template/default.conf.template > /etc/nginx/conf.d/default.conf \
+      envsubst '$$DOMAIN' < /etc/nginx/template/minio.conf.template > /etc/nginx/conf.d/minio.conf \
+      envsubst '$$DOMAIN' < /etc/nginx/template/polaris.conf.template > /etc/nginx/conf.d/polaris.conf \
+      envsubst '$$DOMAIN' < /etc/nginx/template/trino.conf.template > /etc/nginx/conf.d/trino.conf \
       while :; do \
         sleep 6h & wait $${!}; \
         nginx -s reload; \
