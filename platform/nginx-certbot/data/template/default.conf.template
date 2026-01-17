@@ -38,7 +38,7 @@ server {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 
-    include /etc/nginx/include.d/*.conf;
+    # include /etc/nginx/include.d/*.conf;
     location / {
         root /usr/share/nginx/html;
         index index.html;

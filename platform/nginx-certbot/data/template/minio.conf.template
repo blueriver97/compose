@@ -1,6 +1,5 @@
 server {
     listen 80;
-    listen [::]:80;
     server_tokens off;
 
     server_name minio.${DOMAIN};
@@ -16,7 +15,6 @@ server {
 
 server {
     listen 443 ssl;
-    listen [::]:443 ssl;
     server_tokens off;
 
     server_name minio.${DOMAIN};
@@ -46,18 +44,25 @@ server {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 
+    # Docker 내장 DNS 서버 지정
+    # valid=30s는 DNS 결과를 30초 동안 캐싱하여 성능을 최적화함
+    resolver 127.0.0.11 valid=60s;
+
     # MinIO API (S3 API)
     location / {
-        proxy_pass http://minio-server:9000;
+        set $upstream_minio http://minio-server:9000;
+        proxy_pass $upstream_minio;
     }
 
     # MinIO Console (UI)
     # rewrite 대신 trailing slash와 정확한 매칭을 통한 제어
     location /console/ {
+        set $upstream_minio_console http://minio-server:9001;
         rewrite ^/console/(.*) /$1 break;
-        proxy_pass http://minio-server:9001;
 
         # UI 접속 시 chunked encoding 관련 문제 방지
         chunked_transfer_encoding off;
+
+        proxy_pass $upstream_minio_console;
     }
 }

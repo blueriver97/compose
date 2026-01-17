@@ -1,6 +1,5 @@
 server {
     listen 80;
-    listen [::]:80;
     server_tokens off;
 
     server_name polaris.${DOMAIN};
@@ -15,19 +14,18 @@ server {
 }
 
 server {
-    listen 443 ssl; # managed by Certbot
-    listen [::]:443 ssl; # managed by Certbot
+    listen 443 ssl;
     server_tokens off;
 
-    server_name polaris.${DOMAIN}; # managed by Certbot
+    server_name polaris.${DOMAIN};
 
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
 
-    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
     # 공통 헤더 설정
     proxy_set_header Host $http_host;
@@ -38,9 +36,13 @@ server {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 
+    # Docker 내장 DNS 서버 지정
+    # valid=30s는 DNS 결과를 30초 동안 캐싱하여 성능을 최적화함
+    resolver 127.0.0.11 valid=60s;
+
     location / {
-        # root /usr/share/nginx/html;
-        # index index.html;
-        proxy_pass http://polaris:8181;
+        set $upstream_polaris http://polaris:8181;
+
+        proxy_pass $upstream_polaris;
     }
 }

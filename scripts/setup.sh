@@ -147,6 +147,19 @@ fi
 # ---------------------------------------------------------
 # 3. OpenCommit 설정
 # ---------------------------------------------------------
+if ! command -v oco &> /dev/null; then
+    echo "   > Opencommit 설치 중..."
+    npm install -g opencommit > /dev/null 2>&1
+
+    if ! command -v oco &> /dev/null; then
+        check_error 1 "Opencommit 설치 실패 (수동 설치 필요)"
+    else
+        echo -e "${SUCCESS_TAG} Opencommit 설치 완료"
+    fi
+else
+    echo -e "${SUCCESS_TAG} Opencommit 이미 설치됨"
+fi
+
 if [[ -z "$GEMINI_API_KEY" ]]; then
     read -sp "   > Gemini API Key 입력 (없으면 Enter): " INPUT_KEY
     echo ""
