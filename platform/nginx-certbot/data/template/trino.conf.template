@@ -2,7 +2,7 @@ server {
     listen 80;
     server_tokens off;
 
-    server_name trino.${SERVER_NAME};
+    DOMAIN trino.${DOMAIN};
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -17,15 +17,23 @@ server {
     listen 443 ssl; # managed by Certbot
     server_tokens off;
 
-    server_name trino.${SERVER_NAME}; # managed by Certbot
+    DOMAIN trino.${DOMAIN}; # managed by Certbot
 
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
 
-    ssl_certificate /etc/letsencrypt/live/${SERVER_NAME}/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/${SERVER_NAME}/privkey.pem; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem; # managed by Certbot
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
 
     # Docker 내장 DNS 서버 지정
     # valid=30s는 DNS 결과를 30초 동안 캐싱하여 성능을 최적화함
@@ -34,32 +42,12 @@ server {
     location / {
         # 변수를 사용하여 NGINX 시작 시 DNS 체크를 우회
         set $upstream_trino http://trino:8443;
-
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-
         proxy_pass $upstream_trino;
     }
 
     location /ui {
         # 변수를 사용하여 NGINX 시작 시 DNS 체크를 우회
         set $upstream_trino_console http://trino:8080;
-
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-
         proxy_pass $upstream_trino_console;
     }
 }
