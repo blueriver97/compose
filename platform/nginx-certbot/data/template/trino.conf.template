@@ -2,7 +2,7 @@ server {
     listen 80;
     server_tokens off;
 
-    DOMAIN trino.${DOMAIN};
+    server_name trino.${DOMAIN};
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -17,7 +17,7 @@ server {
     listen 443 ssl; # managed by Certbot
     server_tokens off;
 
-    DOMAIN trino.${DOMAIN}; # managed by Certbot
+    server_name trino.${DOMAIN}; # managed by Certbot
 
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
