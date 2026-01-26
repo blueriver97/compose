@@ -1,0 +1,300 @@
+services:
+  controller:
+    image: confluentinc/cp-kafka:${KAFKA_VERSION}
+    container_name: controller
+    hostname: controller
+    environment:
+      CLUSTER_ID: ${CLUSTER_ID}
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093
+      KAFKA_LISTENERS: CONTROLLER://controller:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SSL
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: changeit
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      KAFKA_SSL_KEYSTORE_PASSWORD: changeit
+      KAFKA_SSL_KEY_PASSWORD: changeit
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    # JMX 활성화
+    #      KAFKA_OPTS: >-
+    #        -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+    #        -javaagent:/etc/kafka/jmx_exporter/jmx_prometheus_javaagent-1.4.0.jar=7071:/etc/kafka/jmx_exporter/kafka-jmx-config.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z controller 9093 || exit 1"]
+      interval: 5s
+      retries: 5
+    networks:
+      - default
+    ports:
+      - 9093:9093
+    volumes:
+      - ./jaas/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+      - ./secrets/controller.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+
+  broker:
+    image: confluentinc/cp-kafka:${KAFKA_VERSION}
+    container_name: broker
+    hostname: broker
+    restart: always
+    environment:
+      CLUSTER_ID: ${CLUSTER_ID}
+      KAFKA_NODE_ID: 100
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093
+      KAFKA_ADVERTISED_LISTENERS: BROKER://broker:19092,HOST://localhost:9092
+      KAFKA_LISTENERS: BROKER://:19092,HOST://:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:SSL,BROKER:SSL,HOST:SASL_SSL
+      KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      # Broker 리스너 간 SASL_SSL 사용 시,
+      # KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: changeit
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      KAFKA_SSL_KEYSTORE_PASSWORD: changeit
+      KAFKA_SSL_KEY_PASSWORD: changeit
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_LISTENER_NAME_HOST_SSL_CLIENT_AUTH: none # External Access to Kafka Broker
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+    depends_on:
+      controller:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z broker 9092 || exit 1"]
+      interval: 5s
+      retries: 5
+    networks:
+      - default
+    ports:
+      - 9092:9092
+    volumes:
+      - ./jaas/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+      - ./secrets/broker.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+
+  init-scram:
+    image: confluentinc/cp-kafka:${KAFKA_VERSION}
+    container_name: init-scram
+    depends_on:
+      broker:
+        condition: service_healthy
+    entrypoint: ["/bin/bash", "/usr/bin/setup-scram.sh"]
+    networks:
+      - default
+    volumes:
+      - ./setup-scram.sh:/usr/bin/setup-scram.sh
+      - ./secrets/broker.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:${KAFKA_VERSION}
+    container_name: schema-registry
+    hostname: schema-registry
+    restart: always
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+
+      # SSL 사용 시,
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: SSL://broker:19092
+      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SSL
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_PASSWORD: changeit
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEYSTORE_PASSWORD: changeit
+      SCHEMA_REGISTRY_KAFKASTORE_SSL_KEY_PASSWORD: changeit
+
+      # SASL_SSL 사용 시,
+      # SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: SASL_SSL://broker:9092
+      # SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_SSL
+      # SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: SCRAM-SHA-256
+      # SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: org.apache.kafka.common.security.scram.ScramLoginModule required username="schemaregistry" password="schemaregistry";
+      # SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      # SCHEMA_REGISTRY_KAFKASTORE_SSL_TRUSTSTORE_PASSWORD: changeit
+    depends_on:
+      init-scram:
+        condition: service_completed_successfully
+        required: true
+    healthcheck:
+      test: ["CMD", "curl", "-X", "GET", "http://schema-registry:8081/subjects"]
+      interval: 5s
+      retries: 3
+    networks:
+      - default
+    ports:
+      - 8081:8081
+    volumes:
+      - ./secrets/client.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+
+  src-connect:
+    image: confluentinc/cp-kafka-connect:${KAFKA_VERSION}
+    hostname: src-connect
+    container_name: src-connect
+    environment:
+      # https://docs.confluent.io/platform/current/connect/references/allconfigs.html#common-worker-configuration
+      CONNECT_BOOTSTRAP_SERVERS: broker:19092
+      CONNECT_GROUP_ID: src-connect-cluster
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_CONFIG_STORAGE_TOPIC: src-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: src-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: src-connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_REST_ADVERTISED_HOST_NAME: src-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_TOPIC_CREATION_ENABLE: true
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/local/share/kafka/plugins
+      # SSL 설정
+      CONNECT_SECURITY_PROTOCOL: SSL
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEY_PASSWORD: changeit
+      # Producer SSL 설정
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SSL
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_PRODUCER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_PRODUCER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_PRODUCER_SSL_KEY_PASSWORD: changeit
+      # Consumer SSL 설정
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
+    depends_on:
+      broker:
+        condition: service_started
+        required: true
+      schema-registry:
+        condition: service_started
+        required: true
+    restart: always
+    networks:
+      - default
+    ports:
+      - 18083:8083
+    volumes:
+      - ./secrets/client.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+      - ./connect-plugins/source:/usr/local/share/kafka/plugins
+      - $HOME/.aws:/home/appuser/.aws
+
+  sink-connect:
+    image: confluentinc/cp-kafka-connect:${KAFKA_VERSION}
+    hostname: sink-connect
+    container_name: sink-connect
+    environment:
+      # https://docs.confluent.io/platform/current/connect/references/allconfigs.html#common-worker-configuration
+      CONNECT_BOOTSTRAP_SERVERS: broker:19092
+      CONNECT_GROUP_ID: sink-connect-cluster
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_CONFIG_STORAGE_TOPIC: sink-connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: sink-connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: sink-connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_REST_ADVERTISED_HOST_NAME: sink-connect
+      CONNECT_REST_PORT: 8083
+      CONNECT_TOPIC_CREATION_ENABLE: true
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/local/share/kafka/plugins
+      # SSL 설정
+      CONNECT_SECURITY_PROTOCOL: SSL
+      CONNECT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_SSL_KEY_PASSWORD: changeit
+      # Producer SSL 설정
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SSL
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_PRODUCER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_PRODUCER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_PRODUCER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_PRODUCER_SSL_KEY_PASSWORD: changeit
+      # Consumer SSL 설정
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SSL
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/truststore.jks
+      CONNECT_CONSUMER_SSL_TRUSTSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.keystore.jks
+      CONNECT_CONSUMER_SSL_KEYSTORE_PASSWORD: changeit
+      CONNECT_CONSUMER_SSL_KEY_PASSWORD: changeit
+    depends_on:
+      broker:
+        condition: service_started
+        required: true
+      schema-registry:
+        condition: service_started
+        required: true
+    restart: always
+    networks:
+      - default
+    ports:
+      - 28083:8083
+    volumes:
+      - ./secrets/client.keystore.jks:/etc/kafka/secrets/kafka.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+      - ./connect-plugins/sink:/usr/local/share/kafka/plugins
+      - $HOME/.aws:/home/appuser/.aws
+
+  kafbat-ui:
+    image: ghcr.io/kafbat/kafka-ui:latest
+    container_name: kafbat-ui
+    restart: always
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kraft-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:19092
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
+      DYNAMIC_CONFIG_ENABLED: true
+      # 커넥터 설정
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: source-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://src-connect:8083
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_NAME: sink-connect
+      KAFKA_CLUSTERS_0_KAFKACONNECT_1_ADDRESS: http://sink-connect:8083
+      # SSL 설정
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: SSL
+      # KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM: SCRAM-SHA-256
+      # KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="admin" password="admin-secret";'
+      KAFKA_CLUSTERS_0_SSL_VERIFYSSL: false
+      KAFKA_CLUSTERS_0_SSL_TRUSTSTORELOCATION: /etc/kafka/secrets/truststore.jks
+      KAFKA_CLUSTERS_0_SSL_TRUSTSTOREPASSWORD: changeit
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/client.keystore.jks
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEYSTORE_PASSWORD: changeit
+      KAFKA_CLUSTERS_0_PROPERTIES_SSL_KEY_PASSWORD: changeit
+    networks:
+      - default
+    ports:
+      - 8080:8080
+    volumes:
+      - ./secrets/client.keystore.jks:/etc/kafka/secrets/client.keystore.jks
+      - ./secrets/truststore.jks:/etc/kafka/secrets/truststore.jks
+networks:
+  default:
+    driver: bridge
+    name: service-network

@@ -7,17 +7,20 @@ while IFS='=' read -r key value; do
         DEBEZIUM_VERSION=$value
     elif [[ $key == "GROOVY_VERSION" ]]; then
         GROOVY_VERSION=$value
+    elif [[ $key == "ICEBERG_VERSION" ]]; then
+        ICEBERG_VERSION=$value
     fi
 done < ../.env
 
 # 변수가 올바르게 로드되었는지 확인
-if [ -z "$DEBEZIUM_VERSION" ] || [ -z "$GROOVY_VERSION" ]; then
-    echo "Error: DEBEZIUM_VERSION or GROOVY_VERSION could not be read from .env file."
+if [ -z "$DEBEZIUM_VERSION" ] || [ -z "$GROOVY_VERSION" ] || [ -z "$ICEBERG_VERSION" ]; then
+    echo "Error: DEBEZIUM_VERSION or GROOVY_VERSION or ICEBERG_VERSION could not be read from .env file."
     exit 1
 fi
 
 echo "DEBEZIUM_VERSION=$DEBEZIUM_VERSION"
 echo "GROOVY_VERSION=$GROOVY_VERSION"
+echo "ICEBERG_VERSION=$ICEBERG_VERSION"
 echo ""
 
 # 대상 디렉터리 생성
@@ -30,7 +33,7 @@ declare -a downloaded_files=(
   "debezium-connector-mysql-$DEBEZIUM_VERSION.Final-plugin.tar.gz"
   "debezium-connector-sqlserver-$DEBEZIUM_VERSION.Final-plugin.tar.gz"
   "confluentinc-kafka-connect-s3-11.0.2.zip"
-  "iceberg-iceberg-kafka-connect-1.9.2.zip"
+  "apache-iceberg-$ICEBERG_VERSION.tar.gz"
   "debezium-scripting-$DEBEZIUM_VERSION.Final.tar.gz"
   "groovy-$GROOVY_VERSION.jar"
   "groovy-jsr223-$GROOVY_VERSION.jar"
@@ -47,7 +50,7 @@ for file in "${downloaded_files[@]}"; do
     fi
 
     case "$file" in
-        *debezium-connector-mysql* | *debezium-connector-sqlserver*)
+        *debezium-connector-mysql* | *debezium-connector-sqlserver* | *apache-iceberg*)
             # Debezium Source Connectors and scripting library
             echo "Extracting Source Plugin: $file -> to source/"
             tar -xzf "$file" -C ./source/
