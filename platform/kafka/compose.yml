@@ -8,8 +8,9 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@controller:9093
-      KAFKA_LISTENERS: CONTROLLER://controller:9093
+      KAFKA_LISTENERS: CONTROLLER://:9093
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -70,7 +71,7 @@ services:
       SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: true
     depends_on:
       broker:
-        condition: service_completed_successfully
+        condition: service_started
         required: true
     healthcheck:
       test: ["CMD", "curl", "-X", "GET", "http://schema-registry:8081/subjects"]
