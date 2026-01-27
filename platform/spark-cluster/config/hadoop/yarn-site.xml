@@ -130,6 +130,8 @@
         <value>3600</value>
     </property>
     <property>
+        <!-- I/O 병렬성을 높이기 위한 다중 디스크 설정. 콤마(,) 구분 -->
+        <!-- /data01/yarn/nm,/data02/yarn/nm,/data03/yarn/nm,/data04/yarn/nm -->
         <name>yarn.nodemanager.local-dirs</name>
         <value>/data/yarn/nm</value>
     </property>
