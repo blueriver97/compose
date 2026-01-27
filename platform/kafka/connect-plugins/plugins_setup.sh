@@ -33,7 +33,7 @@ declare -a downloaded_files=(
   "debezium-connector-mysql-$DEBEZIUM_VERSION.Final-plugin.tar.gz"
   "debezium-connector-sqlserver-$DEBEZIUM_VERSION.Final-plugin.tar.gz"
   "confluentinc-kafka-connect-s3-11.0.2.zip"
-  "apache-iceberg-$ICEBERG_VERSION.tar.gz"
+  "iceberg-kafka-connect-runtime-$ICEBERG_VERSION.zip"
   "debezium-scripting-$DEBEZIUM_VERSION.Final.tar.gz"
   "groovy-$GROOVY_VERSION.jar"
   "groovy-jsr223-$GROOVY_VERSION.jar"
@@ -50,7 +50,7 @@ for file in "${downloaded_files[@]}"; do
     fi
 
     case "$file" in
-        *debezium-connector-mysql* | *debezium-connector-sqlserver* | *apache-iceberg*)
+        *debezium-connector-mysql* | *debezium-connector-sqlserver*)
             # Debezium Source Connectors and scripting library
             echo "Extracting Source Plugin: $file -> to source/"
             tar -xzf "$file" -C ./source/
