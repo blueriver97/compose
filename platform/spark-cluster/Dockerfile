@@ -92,8 +92,9 @@ COPY config/zookeeper/* /opt/zookeeper/conf/
 
 # 필요한 디렉토리 생성
 RUN mkdir -p  \
-    /data/yarn/nm \
-    /data/yarn/nm-recovery  \
+    /data01/spark /data02/spark \
+    /data01/yarn/nm /data02/yarn/nm \
+    /data/yarn/nm-recovery \
     /data/zookeeper/snapshot  \
     /data/zookeeper/transaction_log  \
     /var/log/yarn/container-logs  \
