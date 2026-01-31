@@ -3,4 +3,4 @@ astronomer-cosmos
 dbt-core
 dbt-athena
 boto3
-apache-airflow-providers-apache-spark
+apache-airflow-providers-apache-spark==5.5.0
