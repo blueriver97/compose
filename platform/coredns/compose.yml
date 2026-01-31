@@ -1,0 +1,18 @@
+services:
+  coredns:
+    image: coredns/coredns:latest
+    container_name: coredns
+    restart: always
+    command: -conf /Corefile
+    networks:
+      - default
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+    volumes:
+      - ./Corefile:/Corefile
+
+networks:
+  default:
+    driver: bridge
+    name: service-network

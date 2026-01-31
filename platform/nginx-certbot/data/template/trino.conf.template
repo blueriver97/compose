@@ -45,7 +45,7 @@ server {
         proxy_pass $upstream_trino;
     }
 
-    location /ui {
+    location /ui/ {
         # 변수를 사용하여 NGINX 시작 시 DNS 체크를 우회
         set $upstream_trino_console http://trino:8080;
         proxy_pass $upstream_trino_console;
