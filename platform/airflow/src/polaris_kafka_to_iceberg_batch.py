@@ -1,4 +1,3 @@
-# src/05.kafka_to_iceberg_batch.py
 import os
 import json
 from textwrap import dedent

@@ -2,15 +2,6 @@ import datetime
 from airflow.models import DAG, Variable
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-# DAG 설정
-DAG_ID = "kafka_to_iceberg_batch"
-# 처리할 테이블 리스트 (빈 튜플로 초기화)
-TABLES = (
-    "store.tb_lower,"
-    "store.TB_UPPER,"
-    "store.TB_COMPOSITE_KEY"
-)
-
 # Spark 설정
 SPARK_CONF = {
     "spark.yarn.maxAppAttempts": "1",
@@ -22,7 +13,6 @@ SPARK_CONF = {
 }
 
 # 환경 변수
-AWS_PROFILE = "dev"
 S3_BUCKET = Variable.get("S3_BUCKET")
 BOOTSTRAP_SERVERS = Variable.get("BOOTSTRAP_SERVERS")
 SCHEMA_REGISTRY = Variable.get("SCHEMA_REGISTRY")
@@ -33,19 +23,13 @@ VAULT_SECRET_PATH = "secret/data/user/database/local-mysql"
 HADOOP_CONF_DIR = Variable.get("HADOOP_CONF_DIR")
 SPARK_HOME = Variable.get("SPARK_HOME")
 PYSPARK_PYTHON = Variable.get("PYSPARK_PYTHON")
-TOPIC_PREFIX = "local"
+AWS_PROFILE = Variable.get("AWS_PROFILE")
 
+DAG_ID = "kafka_to_iceberg_polaris"
 ENV_VARS = {
-    "AWS_PROFILE": AWS_PROFILE,
-    "S3_BUCKET": S3_BUCKET,
     "BOOTSTRAP_SERVERS": BOOTSTRAP_SERVERS,
     "SCHEMA_REGISTRY": SCHEMA_REGISTRY,
-    "CATALOG": "glue_catalog",
-    "TOPIC_PREFIX": TOPIC_PREFIX,
     "METRIC_NAMESPACE": DAG_ID,
-    "TABLES": TABLES,
-    "ICEBERG_S3_ROOT_PATH": f"s3a://{S3_BUCKET}/iceberg/biz/core",
-    "CHECKPOINT_LOCATION": f"s3a://{S3_BUCKET}/iceberg/checkpoint/{DAG_ID}",
     "VAULT_URL": VAULT_URL,
     "VAULT_USERNAME": VAULT_USERNAME,
     "VAULT_PASSWORD": VAULT_PASSWORD,
@@ -53,6 +37,13 @@ ENV_VARS = {
     "HADOOP_CONF_DIR": HADOOP_CONF_DIR,
     "SPARK_HOME": SPARK_HOME,
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
+    "AWS_PROFILE": AWS_PROFILE,
+    "S3_BUCKET": S3_BUCKET,
+    "CATALOG": "glue_catalog",
+    "ICEBERG_S3_ROOT_PATH": f"s3a://{S3_BUCKET}/iceberg",
+    "CHECKPOINT_LOCATION": f"s3a://{S3_BUCKET}/iceberg/checkpoint/{DAG_ID}",
+    "TOPIC_PREFIX": "local",
+    "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",
 }
 
 # DAG 정의

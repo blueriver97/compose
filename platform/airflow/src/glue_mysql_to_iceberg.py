@@ -1,24 +1,13 @@
-# src/04.mysql_to_iceberg.py
-import os
 from typing import Dict, List
 
 import pyspark.sql.functions as F
-import pyspark.sql.types as T
-from pyspark.sql import SparkSession, DataFrame, Column
+import pyspark.sql.types as T # noqa
+from pyspark.sql import SparkSession, DataFrame, Column # noqa
 
 # --- Import common modules ---
 from utils.logging import setup_console_logging
 from utils.settings import Settings
 from utils.database import get_jdbc_options, get_primary_keys, get_partition_key_info
-
-
-def cast_dataframe(df: DataFrame) -> DataFrame:
-    """Timestamp 타입은 UTC 시간으로 변경하고 Boolean 타입은 Int로 변경함"""
-
-    def cast_column_type(field: T.StructField) -> Column:
-        return F.col(field.name).alias(field.name)
-
-    return df.select([cast_column_type(field) for field in df.schema.fields])
 
 
 def main(spark: SparkSession, config: Settings) -> None:
@@ -75,7 +64,7 @@ def main(spark: SparkSession, config: Settings) -> None:
                 logger.info(f"Reading '{table_name}' without partitioning.")
                 jdbc_df = spark.read.format("jdbc").options(**jdbc_options).option("dbtable", table_name).load()
 
-            jdbc_df = cast_dataframe(jdbc_df)
+            logger.info(f"Add column 'last_applied_date' to {table_name}")
             jdbc_df = jdbc_df.withColumn("last_applied_date", F.current_timestamp())
 
             # Note. Create the database if it does not exist.
@@ -91,7 +80,10 @@ def main(spark: SparkSession, config: Settings) -> None:
                 'write.merge.mode'='merge-on-read',
             """
             if pk_cols:
-                jdbc_df = jdbc_df.withColumn("id_iceberg", F.md5(F.concat_ws("|", *[F.col(pk) for pk in pk_cols])))
+                jdbc_df = jdbc_df.withColumn("id_iceberg", F.md5(F.concat_ws('|', *[F.col(c) for c in pk_cols])))
+                jdbc_df.printSchema()
+                jdbc_df.explain(mode="formatted")
+
                 (
                     jdbc_df.limit(1)
                     .writeTo(f"{full_table_name}")
@@ -125,6 +117,7 @@ def main(spark: SparkSession, config: Settings) -> None:
 
         except Exception as e:
             logger.error(f"[FAIL] Failed to process {table_name}: {e}")
+            raise e
 
     logger.info("Iceberg table creation process finished.")
 
@@ -144,7 +137,9 @@ if __name__ == "__main__":
         .config(f"spark.sql.catalog.{settings.CATALOG}.warehouse", settings.ICEBERG_S3_ROOT_PATH)
         .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
         .config("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+        .config("spark.sql.caseSensitive", "true")
         .config("spark.sql.session.timeZone", "UTC")
+        .config("spark.sql.optimizer.excludedRules", "org.apache.spark.sql.catalyst.optimizer.SimplifyCasts")
         .getOrCreate()
     )
 

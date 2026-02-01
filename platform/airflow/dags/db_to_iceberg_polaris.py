@@ -2,16 +2,6 @@ import datetime
 from airflow.models import DAG, Variable
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-DAG_ID = "db_to_iceberg"
-
-# "<schema>.<table>,"
-# 마지막 테이블 , 제외
-TABLES = (
-    "store.tb_lower,"
-    "store.TB_UPPER,"
-    "store.TB_COMPOSITE_KEY"
-)
-
 # Spark 설정
 SPARK_CONF = {
     "spark.yarn.maxAppAttempts": "1",
@@ -30,23 +20,26 @@ HADOOP_CONF_DIR = Variable.get("HADOOP_CONF_DIR")
 SPARK_HOME = Variable.get("SPARK_HOME")
 PYSPARK_PYTHON = Variable.get("PYSPARK_PYTHON")
 SPARK_DIST_CLASSPATH = Variable.get("SPARK_DIST_CLASSPATH")
-ICEBERG_S3_ROOT_PATH = Variable.get("ICEBERG_S3_ROOT_PATH")
-CATALOG = Variable.get("CATALOG")
+AWS_PROFILE = Variable.get("AWS_PROFILE")
+S3_BUCKET = Variable.get("S3_BUCKET")
 
 ENV_VARS = {
-    "TABLES": TABLES,
-    "CATALOG": CATALOG,
     "VAULT_URL": VAULT_URL,
     "VAULT_USERNAME": VAULT_USERNAME,
     "VAULT_PASSWORD": VAULT_PASSWORD,
     "VAULT_SECRET_PATH": VAULT_SECRET_PATH,
-    "ICEBERG_S3_ROOT_PATH": ICEBERG_S3_ROOT_PATH,
     "HADOOP_CONF_DIR": HADOOP_CONF_DIR,
     "SPARK_HOME": SPARK_HOME,
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
     "SPARK_DIST_CLASSPATH": SPARK_DIST_CLASSPATH,
+    "AWS_PROFILE": AWS_PROFILE,
+    "S3_BUCKET": S3_BUCKET,
+    "CATALOG": "polaris",
+    "ICEBERG_S3_ROOT_PATH": f"s3a://{S3_BUCKET}/iceberg",
+    "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",
 }
 
+DAG_ID = "db_to_iceberg_polaris"
 with DAG(
         dag_id=DAG_ID,
         description="Batch job to process DB tables and write to Iceberg using Spark",
