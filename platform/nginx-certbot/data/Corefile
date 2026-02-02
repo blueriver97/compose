@@ -1,36 +1,42 @@
-.:53 {
+# 1. 내부 서비스 전용 존 (Maintainability & Reliability)
+# svc.internal 도메인에 대한 권한 있는 응답을 처리.
+svc.internal:53 {
+    # 앞서 작성한 Zone 파일을 로드합니다.
+    file /etc/coredns/svc.internal.db
 
-    # Health check endpoint 활성화 (기본 포트 8080)
+    # 내부 쿼리에 최적화된 캐시 설정
+    cache 60
+    log
+    errors
+}
+
+# 2. 글로벌 및 외부 도메인 처리 존 (Performance & Architecture)
+# 그 외 모든 질의(외부 사이트 및 DDNS)를 처리.
+.:53 {
     health {
         lameduck 5s
     }
-
-    # 서비스가 질의를 처리할 준비가 되었는지 확인
     ready
 
+    # 특정 외부 도메인을 로컬 IP로 매핑 (Hosts plugin)
     hosts {
-        # Internal Access
-        172.30.1.99 mysql.svc.internal
-        172.30.1.99 sqlserver.svc.internal
-        172.30.1.98 kafka.svc.internal
-        172.30.1.99 airflow.svc.internal
-        172.30.1.100 minio.svc.internal
-        172.30.1.100 trino.svc.internal
-        172.30.1.100 polaris.svc.internal
-
-        # External Access (CA)
         172.30.1.100 kafka-ui.blueriver.ddns.net
         172.30.1.100 airflow.blueriver.ddns.net
         172.30.1.100 minio.blueriver.ddns.net
         172.30.1.100 trino.blueriver.ddns.net
         172.30.1.100 polaris.blueriver.ddns.net
 
+        # 설정된 도메인이 아니면 다음 단계(forward)로 넘김
         fallthrough
     }
 
-    forward . 168.126.63.1 168.126.63.2
+    # 업스트림 포워딩 (KT DNS 사용)
+    forward . 168.126.63.1 168.126.63.2 {
+        max_fails 3
+        expire 10s
+    }
 
+    cache 30
     log
     errors
-    cache 30
 }

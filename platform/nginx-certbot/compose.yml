@@ -11,6 +11,7 @@ services:
       - 53:53/udp
     volumes:
       - ./data/Corefile:/Corefile
+      - ./data/svc.internal.db:/etc/coredns/svc.internal.db
 
   nginx:
     image: nginx:latest

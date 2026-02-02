@@ -1,0 +1,31 @@
+$ORIGIN svc.internal.
+$TTL 60 ; Performance: 짧은 TTL로 IP 변경 시 빠른 전파 보장
+
+@   3600 IN SOA ns.svc.internal. support.svc.internal. (
+        2026020301  ; serial (Zone 설정 버전, YYYYMMDDNN 형식으로 관리 권장)
+        7200        ; refresh
+        3600        ; retry
+        1209600     ; expire
+        3600        ; minimum
+)
+
+; --- Name Server Records (Reliability) ---
+@           IN NS   ns.svc.internal.
+ns          IN A    172.30.1.100 ; DNS 서버 자체의 IP (Glue Record)
+
+; --- Internal Service Records (Scalability) ---
+; Database Services
+mysql       IN A    172.30.1.99
+sqlserver   IN A    172.30.1.99
+
+; Messaging & Data Pipeline
+kafka       IN A    172.30.1.98
+airflow     IN A    172.30.1.99
+
+; Storage & Query Engine
+minio       IN A    172.30.1.100
+trino       IN A    172.30.1.100
+polaris     IN A    172.30.1.100
+
+; --- Additional Service Mappings ---
+; 필요 시 여기에 새로운 서비스 추가
