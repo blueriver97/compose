@@ -86,7 +86,7 @@ services:
       - mysql-data:/var/lib/mysql
 
   opensearch:
-    image: opensearchproject/opensearch:2.17.0
+    image: blueriver97/opensearch:2.17.0
     build:
       context: .
       dockerfile: opensearch.Dockerfile
@@ -344,7 +344,12 @@ services:
       io.datahubproject.datahub.component: gms
 
   datahub-actions:
-    image: acryldata/datahub-actions:${DATAHUB_VERSION}-slim
+    image: blueriver97/datahub-actions:${DATAHUB_VERSION}-slim
+    build:
+      context: .
+      dockerfile: actions.Dockerfile
+      args:
+        DATAHUB_VERSION: ${DATAHUB_VERSION}
     container_name: datahub-actions
     restart: always
     hostname: actions
