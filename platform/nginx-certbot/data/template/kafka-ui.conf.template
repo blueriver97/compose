@@ -39,7 +39,7 @@ server {
     resolver coredns valid=60s;
     location / {
         # 변수를 사용하여 NGINX 시작 시 DNS 체크를 우회
-        set $upstream_kafka_ui http://kafka.svc.local:8080;
+        set $upstream_kafka_ui http://kafka.svc.internal:8080;
         proxy_pass $upstream_kafka_ui;
     }
 }

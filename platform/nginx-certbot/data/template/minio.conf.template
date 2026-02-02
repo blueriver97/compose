@@ -49,13 +49,13 @@ server {
 
     # MinIO API (S3 API)
     location / {
-        set $upstream_minio http://minio.svc.local:9000;
+        set $upstream_minio http://minio.svc.internal:9000;
         proxy_pass $upstream_minio;
     }
 
     # MinIO Console (UI)
     location /console/ {
-        set $upstream_minio_console http://minio.svc.local:9001;
+        set $upstream_minio_console http://minio.svc.internal:9001;
         rewrite ^/console/(.*)$ /$1 break;
 
         # UI 접속 시 chunked encoding 관련 문제 방지

@@ -40,7 +40,7 @@ server {
     resolver coredns valid=60s;
 
     location / {
-        set $upstream_polaris http://polaris.svc.local:8181;
+        set $upstream_polaris http://polaris.svc.internal:8181;
         proxy_pass $upstream_polaris;
     }
 }

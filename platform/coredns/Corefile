@@ -10,13 +10,13 @@
 
     hosts {
         # Internal Access
-        172.30.1.99 mysql.svc.local
-        172.30.1.99 sqlserver.svc.local
-        172.30.1.98 kafka.svc.local
-        172.30.1.99 airflow.svc.local
-        172.30.1.100 minio.svc.local
-        172.30.1.100 trino.svc.local
-        172.30.1.100 polaris.svc.local
+        172.30.1.99 mysql.svc.internal
+        172.30.1.99 sqlserver.svc.internal
+        172.30.1.98 kafka.svc.internal
+        172.30.1.99 airflow.svc.internal
+        172.30.1.100 minio.svc.internal
+        172.30.1.100 trino.svc.internal
+        172.30.1.100 polaris.svc.internal
 
         # External Access (CA)
         172.30.1.100 kafka-ui.blueriver.ddns.net
