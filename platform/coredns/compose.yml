@@ -11,6 +11,7 @@ services:
       - 53:53/udp
     volumes:
       - ./Corefile:/Corefile
+      - ./svc.internal.db:/etc/coredns/svc.internal.db
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 10s
