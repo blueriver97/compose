@@ -1,4 +1,22 @@
 services:
+  coredns:
+    image: coredns/coredns:latest
+    container_name: coredns
+    restart: always
+    command: -conf /Corefile
+    networks:
+      - default
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+    volumes:
+      - .data/Corefile:/Corefile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   nginx:
     image: nginx:latest
     container_name: nginx
@@ -27,6 +45,10 @@ services:
       - ./data/nginx:/etc/nginx/conf.d
       - ./data/certbot/www:/var/www/certbot
       - ./data/certbot/conf:/etc/letsencrypt
+  depends_on:
+    coredns:
+      condition: service_healthy
+
   certbot:
     image: certbot/certbot
     container_name: certbot

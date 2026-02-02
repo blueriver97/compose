@@ -11,6 +11,11 @@ services:
       - 53:53/udp
     volumes:
       - ./Corefile:/Corefile
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 networks:
   default:

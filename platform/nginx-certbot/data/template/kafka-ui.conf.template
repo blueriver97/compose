@@ -2,7 +2,7 @@ server {
     listen 80;
     server_tokens off;
 
-    server_name polaris.${DOMAIN};
+    server_name kafka-ui.${DOMAIN};
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -14,21 +14,20 @@ server {
 }
 
 server {
-    listen 443 ssl;
+    listen 443 ssl; # managed by Certbot
     server_tokens off;
 
-    server_name polaris.${DOMAIN};
+    server_name kafka-ui.${DOMAIN}; # managed by Certbot
 
     root /var/www/html;
     index index.html index.htm index.nginx-debian.html;
 
-    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
-    # 공통 헤더 설정
-    proxy_set_header Host $http_host;
+    proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -38,9 +37,9 @@ server {
 
     # DNS 서버 지정
     resolver coredns valid=60s;
-
     location / {
-        set $upstream_polaris http://polaris.svc.local:8181;
-        proxy_pass $upstream_polaris;
+        # 변수를 사용하여 NGINX 시작 시 DNS 체크를 우회
+        set $upstream_kafka_ui http://kafka.svc.local:8080;
+        proxy_pass $upstream_kafka_ui;
     }
 }

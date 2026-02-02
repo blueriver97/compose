@@ -35,19 +35,18 @@ server {
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
 
-    # Docker 내장 DNS 서버 지정
-    # valid=30s는 DNS 결과를 30초 동안 캐싱하여 성능을 최적화함
-    resolver 127.0.0.11 valid=60s;
+    # DNS 서버 지정
+    resolver coredns valid=60s;
 
     location / {
         # 변수를 사용하여 NGINX 시작 시 DNS 체크를 우회
-        set $upstream_trino http://trino:8443;
+        set $upstream_trino http://trino.svc.local:8443;
         proxy_pass $upstream_trino;
     }
 
     location /ui/ {
         # 변수를 사용하여 NGINX 시작 시 DNS 체크를 우회
-        set $upstream_trino_console http://trino:8080;
+        set $upstream_trino_console http://trino.svc.local:8080;
         proxy_pass $upstream_trino_console;
     }
 }
