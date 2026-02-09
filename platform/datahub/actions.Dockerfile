@@ -11,7 +11,7 @@ USER root
 SHELL ["/bin/bash", "-c"]
 # 패키지 업데이트 및 필요한 개발 도구들 설치
 RUN apt-get update &&\
-    apt-get install -y gcc vim telnet
+    apt-get install -y build-essential vim telnet
 
 USER datahub
 RUN uv pip install setuptools wheel &&\
