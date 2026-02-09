@@ -58,7 +58,7 @@ services:
         fi
 
         echo 'MinIO init complete.'
-        tail -f /dev/null
+        # tail -f /dev/null
     networks:
       - default
 
