@@ -62,9 +62,9 @@ services:
     hostname: mysql
     environment:
       MYSQL_DATABASE: datahub
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_PASSWORD: datahub
       MYSQL_ROOT_HOST: "%"
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: datahub
       MYSQL_USER: datahub
     command:
       - --character-set-server=utf8mb4
@@ -132,9 +132,9 @@ services:
       CDC_USER: datahub_cdc
       DATAHUB_DB_NAME: datahub
       MYSQL_HOST: mysql
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_PASSWORD: datahub
       MYSQL_PORT: "3306"
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: datahub
       MYSQL_USERNAME: datahub
     networks:
       default: null
@@ -192,7 +192,7 @@ services:
       DATAHUB_PRECREATE_TOPICS: "true"
       EBEAN_DATASOURCE_DRIVER: com.mysql.jdbc.Driver
       EBEAN_DATASOURCE_HOST: mysql:3306
-      EBEAN_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      EBEAN_DATASOURCE_PASSWORD: datahub
       EBEAN_DATASOURCE_URL: jdbc:mysql://mysql:3306/datahub?verifyServerCertificate=false&useSSL=true&useUnicode=yes&characterEncoding=UTF-8&enabledTLSProtocols=TLSv1.2
       EBEAN_DATASOURCE_USERNAME: datahub
       ELASTICSEARCH_BUILD_INDICES_CLONE_INDICES: "false"
@@ -285,7 +285,7 @@ services:
       DATAHUB_UPGRADE_HISTORY_KAFKA_CONSUMER_GROUP_ID: generic-duhe-consumer-job-client-gms
       EBEAN_DATASOURCE_DRIVER: com.mysql.jdbc.Driver
       EBEAN_DATASOURCE_HOST: mysql:3306
-      EBEAN_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      EBEAN_DATASOURCE_PASSWORD: datahub
       EBEAN_DATASOURCE_URL: jdbc:mysql://mysql:3306/datahub?verifyServerCertificate=false&useSSL=true&useUnicode=yes&characterEncoding=UTF-8&enabledTLSProtocols=TLSv1.2
       EBEAN_DATASOURCE_USERNAME: datahub
       ELASTICSEARCH_HOST: search
@@ -340,7 +340,6 @@ services:
     volumes:
       - ./datahub/plugins:/etc/datahub/plugins
       - ./datahub/search:/etc/datahub/search
-      - ./datahub/resource:/datahub/datahub-gms/resources
     labels:
       io.datahubproject.datahub.component: gms
 
@@ -364,8 +363,6 @@ services:
       DATAHUB_GMS_HOST: datahub-gms
       DATAHUB_GMS_PORT: "8080"
       DATAHUB_GMS_PROTOCOL: http
-      DATAHUB_SYSTEM_CLIENT_ID: __datahub_system
-      DATAHUB_SYSTEM_CLIENT_SECRET: ${DATAHUB_SYSTEM_CLIENT_SECRET}
       ELASTICSEARCH_HOST: search
       ELASTICSEARCH_PORT: "9200"
       ELASTICSEARCH_PROTOCOL: http
@@ -375,12 +372,11 @@ services:
       METADATA_AUDIT_EVENT_NAME: MetadataAuditEvent_v4
       METADATA_CHANGE_LOG_VERSIONED_TOPIC_NAME: MetadataChangeLog_Versioned_v1
       SCHEMA_REGISTRY_URL: http://datahub-gms:8080/schema-registry/api/
+      UV_INDEX_URL: https://nexus.hunet.tech/repository/pypi-remote/simple
     networks:
       default: null
-#    volumes:
-#      - ./pip.conf:/root/.pip/pip.conf
-#      - ./pip.conf:/home/datahub/.pip/pip.conf
-#      - ./recipes:/home/datahub/recipes
+    volumes:
+      - ./recipes:/home/datahub/recipes
 
 networks:
   default:

@@ -11,10 +11,10 @@ USER root
 SHELL ["/bin/bash", "-c"]
 # 패키지 업데이트 및 필요한 개발 도구들 설치
 RUN apt-get update &&\
-    apt-get install -y gcc
+    apt-get install -y gcc vim telnet
 
-RUN uv pip install pip setuptools wheel &&\
-    uv pip install acryl-datahub[all] &&\
+USER datahub
+RUN uv pip install setuptools wheel &&\
     uv cache clean
 
 # /home/datahub/.venv/bin/python3 -m ensurepip --default-pip &&\

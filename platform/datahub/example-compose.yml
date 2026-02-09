@@ -1,5 +1,5 @@
-# This file is generated as part of build process.
-# If any build changes cause this file to be modified, please check in the generated file
+# This file is generated as part of build process. If any build changes cause this file to be modified, please check in the generated file
+name: datahub
 services:
   datahub-actions-quickstart:
     profiles:
@@ -30,7 +30,6 @@ services:
     image: acryldata/datahub-actions:${DATAHUB_VERSION}-slim
     networks:
       default: null
-
   datahub-gms-quickstart:
     profiles:
       - quickstart
@@ -116,7 +115,6 @@ services:
         target: /etc/datahub/search
         bind:
           create_host_path: true
-
   frontend-quickstart:
     profiles:
       - quickstart
@@ -157,7 +155,6 @@ services:
         target: /etc/datahub/plugins
         bind:
           create_host_path: true
-
   kafka-broker:
     command:
       - /bin/bash
@@ -217,7 +214,6 @@ services:
         source: broker
         target: /var/lib/kafka/data
         volume: {}
-
   mysql:
     profiles:
       - quickstart
@@ -270,7 +266,6 @@ services:
         source: mysqldata
         target: /var/lib/mysql
         volume: {}
-
   mysql-setup:
     profiles:
       - quickstart
@@ -298,7 +293,6 @@ services:
       datahub_setup_job: "true"
     networks:
       default: null
-
   opensearch:
     profiles:
       - quickstart
@@ -355,7 +349,6 @@ services:
         source: osdata
         target: /usr/share/opensearch/data
         volume: {}
-
   opensearch-setup:
     profiles:
       - quickstart
@@ -388,7 +381,6 @@ services:
       datahub_setup_job: "true"
     networks:
       default: null
-
   system-update-quickstart:
     profiles:
       - quickstart
@@ -460,11 +452,9 @@ services:
         target: /etc/datahub/plugins
         bind:
           create_host_path: true
-
 networks:
   default:
     name: datahub_network
-
 volumes:
   broker:
     name: datahub_broker
