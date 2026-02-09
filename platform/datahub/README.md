@@ -36,7 +36,7 @@ docker-compose up -d
 
 - Ingestion 구성 시 'Advanced' 속성에서 `CLI Version`, `Extra Enviroment Variables` 추가 설정 필요.
 - datahub-actions 컨테이너에 직접 선언해도, 실제 수집 파이프라인이 참조하지 못하는 것으로 파악함.
-- 또한 venv 구성 후 자동으로 requirements.txt를 설치해서 환경을 구성해야 하는데, 이 부분이 항상 실패하기 때문에 수동 설치 후 재시작 진행
+- 또한 venv 구성 후 자동으로 requirements.txt를 설치해서 환경을 구성해야 하는데, 이 부분이 계속 실패하면 수동 설치 후 재시작
   이 부분은 수동 설치로 인해 남아있는 캐시를 사용해 설치되는 것으로 추측함.
 
 ```json
