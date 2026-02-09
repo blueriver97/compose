@@ -378,8 +378,8 @@ services:
     networks:
       default: null
 #    volumes:
-#      - ./pip:/root/.pip
-#      - ./pip:/datahub-actions/.pip
+#      - ./pip.conf:/root/.pip/pip.conf
+#      - ./pip.conf:/home/datahub/.pip/pip.conf
 #      - ./recipes:/home/datahub/recipes
 
 networks:
