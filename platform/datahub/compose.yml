@@ -340,6 +340,7 @@ services:
     volumes:
       - ./datahub/plugins:/etc/datahub/plugins
       - ./datahub/search:/etc/datahub/search
+      - ./datahub/resource:/datahub/datahub-gms/resources
     labels:
       io.datahubproject.datahub.component: gms
 
@@ -376,6 +377,10 @@ services:
       SCHEMA_REGISTRY_URL: http://datahub-gms:8080/schema-registry/api/
     networks:
       default: null
+#    volumes:
+#      - ./pip:/root/.pip
+#      - ./pip:/datahub-actions/.pip
+#      - ./recipes:/home/datahub/recipes
 
 networks:
   default:
