@@ -22,7 +22,8 @@ trino: polaris 카탈로그를 거쳐 데이터 조회를 수행하는 쿼리 �
 
 1. OAuth2 기반 인증: 클라이언트는 Principal 자격 증명을 통해 Polaris 토큰 엔드포인트에서 JWT를 발급받습니다.
 2. 접근 위임 (Access Delegation):
-   - Spark 설정에서 `X-Iceberg-Access-Delegation=vended-credentials` 옵션을 활성화하면 Polaris가 MinIO와 통신하여 해당 테이블 작업에 필요한 임시 자격 증명을
+   - Spark 설정에서 `X-Iceberg-Access-Delegation=vended-credentials` 옵션을 활성화하면 Polaris가 MinIO와 통신하여 해당 테이블 작업에 필요한 임시 자격
+     증명을
      생성합니다.
    - 클라이언트는 Polaris가 제공한 임시 권한을 사용해 Minio에 접근합니다.
 3. RBAC 기반 권한 제어: admin_role 및 catalog_role을 통해 테이블 수준의 읽기/쓰기 권한을 정밀하게 제어합니다.
@@ -120,20 +121,26 @@ spark-sql \
     --conf spark.sql.catalog.polaris.token-refresh-enabled=true
 ```
 
-### Trino 연동
+### Trino 연동 (HTTP)
 
-Trino는 SSL(HTTPS)과 Password 인증이 활성화되어 있습니다.
-Trino는 SSL 인증 시 keystore.p12을 사용합니다.
-Client Key Password는 \*.p12 파일 생성에 사용된 비밀 값을 의미합니다.
+- 단순하게 HTTP 기반으로 통신하려는 경우, 8080 포트를 사용해야 하며 별도의 인증 없이 사용합니다.
+- 이 경우 JDBC 설정에 `user` property를 통해 유저명을 입력해야 합니다.
+  (PyCharm 연결 시, `No Auth` 선택 후 `Advanced` 탭에서 `user` 속성 추가 필요)
 
-- Endpoint: `https://localhost:8443`
-- User: `trino`
-- Password: `trinoadmin`
+### Trino 연동 (HTTPS)
 
-CA File: `server.crt`
-Client Certificate File: `server.crt`
-Client Key File: `server.key`
-Client Key Password: `password1!`
+- Trino는 Password 기반의 인증을 활성화하는 경우 SSL(HTTPS) 활성화가 강제됩니다.
+- HTTPS 사용 시, keystore.p12을 사용하며 Client Key Password는 \*.p12 파일 생성에 사용된 비밀 값을 의미합니다.
+
+```yaml
+Endpoint: https://localhost:8443
+User: trino
+Password: trinoadmin
+CA File: server.crt
+Client Certificate File: server.crt
+Client Key File: server.key
+Client Key Password: password1!
+```
 
 ### REST API 테스트
 
