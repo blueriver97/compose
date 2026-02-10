@@ -68,8 +68,7 @@ services:
       # 운영환경에서는 true로 설정해야 함.
       # 2025-12-20 기준 Trino가 http 커스텀 헤더 전달을 지원하지 않으므로, 기본 Realm이 사용되도록 설정
       polaris.realm-context.require-header: "false"
-      # Staging SSL 테스트 시
-    #    user: root
+    #    # Staging SSL 테스트 시
     #    entrypoint:
     #      - /bin/sh
     #      - -c
@@ -88,14 +87,15 @@ services:
     #
     #        echo 'INFO: Starting Polaris service...'
     #        exec /opt/jboss/container/java/run/run-java.sh
+    #    user: root
     networks:
       - default
     ports:
       - 8181:8181
-    volumes:
-      #      - ../nginx-certbot/ssl:/tmp/ssl
-      - ./secret/private-key.pem:/tmp/keys/private-key.pem
-      - ./secret/public-key.pem:/tmp/keys/public-key.pem
+    #    volumes:
+    #      - ../nginx-certbot/ssl:/tmp/ssl
+    #      - ./secret/private-key.pem:/tmp/keys/private-key.pem
+    #      - ./secret/public-key.pem:/tmp/keys/public-key.pem
     healthcheck:
       test: ["CMD", "curl", "http://localhost:8182/q/health"]
       interval: 2s
@@ -323,9 +323,9 @@ services:
     volumes:
       - ./trino-config/catalog:/etc/trino/catalog
       - ./trino-config/config.properties:/etc/trino/config.properties
-      - ./trino-config/password-authenticator.properties:/etc/trino/password-authenticator.properties
-      - ./secret/password.db:/tmp/keys/password.db
-      - ./secret/keystore.p12:/tmp/keys/keystore.p12
+#      - ./trino-config/password-authenticator.properties:/etc/trino/password-authenticator.properties
+#      - ./secret/password.db:/tmp/keys/password.db
+#      - ./secret/keystore.p12:/tmp/keys/keystore.p12
 
 networks:
   default:
