@@ -92,10 +92,10 @@ services:
       - default
     ports:
       - 8181:8181
-    #    volumes:
-    #      - ../nginx-certbot/ssl:/tmp/ssl
-    #      - ./secret/private-key.pem:/tmp/keys/private-key.pem
-    #      - ./secret/public-key.pem:/tmp/keys/public-key.pem
+    volumes:
+      #- ../nginx-certbot/ssl:/tmp/ssl
+      - ./secret/private-key.pem:/tmp/keys/private-key.pem
+      - ./secret/public-key.pem:/tmp/keys/public-key.pem
     healthcheck:
       test: ["CMD", "curl", "http://localhost:8182/q/health"]
       interval: 2s

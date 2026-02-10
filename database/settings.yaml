@@ -1,5 +1,5 @@
 database:
-  host: "localhost"
+  host: "mysql.svc.internal"
   port: 3306 # 1433
   user: "root"
   password: "mysql"
