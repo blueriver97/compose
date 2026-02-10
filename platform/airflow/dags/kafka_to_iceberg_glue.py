@@ -13,7 +13,6 @@ SPARK_CONF = {
 }
 
 # 환경 변수
-S3_BUCKET = Variable.get("S3_BUCKET")
 BOOTSTRAP_SERVERS = Variable.get("BOOTSTRAP_SERVERS")
 SCHEMA_REGISTRY = Variable.get("SCHEMA_REGISTRY")
 VAULT_URL = Variable.get("VAULT_URL")
