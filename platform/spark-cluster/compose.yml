@@ -39,9 +39,9 @@ services:
       tail -f /dev/null
       "
     ports:
-      - 23:22
-      - 18080:18080
-      - 15002:15002
+      - 0.0.0.0:23:22
+      - 0.0.0.0:18080:18080
+      - 0.0.0.0:15002:15002
 
   node01:
     <<: *cluster-common
@@ -61,8 +61,10 @@ services:
       tail -f /dev/null
       "
     ports:
-      - 8088:8088
-      - 8042:8042
+      - 0.0.0.0:8030:8030
+      - 0.0.0.0:8032:8032
+      - 0.0.0.0:8088:8088
+      - 0.0.0.0:8042:8042
     depends_on:
       - admin
 
@@ -86,8 +88,10 @@ services:
       tail -f /dev/null
       "
     ports:
-      - 8089:8089
-      - 8043:8043
+      - 0.0.0.0:8031:8030
+      - 0.0.0.0:8033:8032
+      - 0.0.0.0:8089:8089
+      - 0.0.0.0:8043:8043
     depends_on:
       - admin
 
@@ -108,7 +112,7 @@ services:
       tail -f /dev/null
       "
     ports:
-      - 8044:8044
+      - 0.0.0.0:8044:8044
     depends_on:
       - admin
 
@@ -121,8 +125,8 @@ services:
     networks:
       - default
     ports:
-      - 9108:9108
-      - 9109:9109
+      - 0.0.0.0:9108:9108
+      - 0.0.0.0:9109:9109
     volumes:
       - ./config/graphite/graphite_mapping.conf:/tmp/graphite_mapping.conf
 
