@@ -1,51 +1,49 @@
 global:
-  scrape_interval: 15s # By default, scrape targets every 15 seconds.
-  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  scrape_interval: 15s
+  # VictoriaMetrics 싱글 노드는 규칙 평가를 직접 하지 않으므로 evaluation_interval은 제외합니다.
 
-  external_labels:
-    monitor: "수집된 모든 데이터에 추가될 레이블"
+#  external_labels:
+#    monitor: "my-project"
 
-#     A scrape configuration containing exactly one endpoint to scrape:
-#     Here it's Prometheus itself.
 scrape_configs:
-  # 모니터링 시스템 자체의 상태를 수집
-  - job_name: "prometheus"
+  # VictoriaMetrics 자체 메트릭 수집
+  - job_name: "victoriametrics"
     scrape_interval: 15s
     static_configs:
-      - targets: ["localhost:9090"]
+      - targets: ["localhost:8428"]
 
-  #  호스트 OS의 리소스(CPU, 메모리, 디스크 등) 상태를 수집
+  # 호스트 OS 리소스 수집 (node_exporter)
   - job_name: "node_exporter"
     scrape_interval: 15s
     static_configs:
-      - targets: ["localhost:9100"]
+      - targets: ["server.local:9100"]
 
-  # Java 애플리케이션(JVM)의 내부 상태(Heap, GC 등)를 수집
+  # Java 애플리케이션 수집 (jmx_exporter)
   - job_name: "jmx_exporter"
     scrape_interval: 15s
     static_configs:
-      - targets: ["localhost:7071"]
+      - targets: ["server.local:7071"]
 
-  # Graphite 프로토콜로 들어오는 데이터를 수집
+  # Graphite 데이터 수집 (출력 포트인 9108 사용)
   - job_name: "graphite_exporter"
     scrape_interval: 15s
     static_configs:
-      - targets: ["localhost:9108"]
+      - targets: ["server.local:9108"]
 
-  # AWS CloudWatch 메트릭을 연동하여 수집
+  # AWS CloudWatch 연동 수집
   - job_name: "cloudwatch_exporter"
     scrape_interval: 15s
     static_configs:
-      - targets: ["localhost:9106"]
+      - targets: ["server.local:9106"]
 
-  # monitoring/yarn-exporter/yarn_exporter.py
+  # Hadoop YARN 수집 (Python 버전)
   - job_name: "yarn-python-exporter"
     scrape_interval: 15s
     static_configs:
-      - targets: ["localhost:9459"]
+      - targets: ["server.local:9459"]
 
-  # https://github.com/PBWebMedia/yarn-prometheus-exporter
+  # Hadoop YARN 수집 (Prometheus 버전)
   - job_name: "yarn-prometheus-exporter"
     scrape_interval: 15s
     static_configs:
-      - targets: ["localhost:9113"]
+      - targets: ["server.local:9113"]
