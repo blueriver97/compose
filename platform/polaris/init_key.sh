@@ -6,6 +6,7 @@ mkdir -p secret
 # Polaris Token-broker key files
 openssl genrsa -out secret/private-key.pem 2048
 openssl rsa -in secret/private-key.pem -pubout -out secret/public-key.pem
+chmod -R 0644 secret/*.pem
 
 # Trino Login User/Password
 # touch secret/password.db

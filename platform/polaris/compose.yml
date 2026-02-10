@@ -91,7 +91,7 @@ services:
     networks:
       - default
     ports:
-      - 8181:8181
+      - 0.0.0.0:8181:8181
     volumes:
       #- ../nginx-certbot/ssl:/tmp/ssl
       - ./secret/private-key.pem:/tmp/keys/private-key.pem
@@ -318,8 +318,8 @@ services:
     networks:
       - default
     ports:
-      - 8080:8080
-      - 8443:8443
+      - 0.0.0.0:8080:8080
+      - 0.0.0.0:8443:8443
     volumes:
       - ./trino-config/catalog:/etc/trino/catalog
       - ./trino-config/config.properties:/etc/trino/config.properties
