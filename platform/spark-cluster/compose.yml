@@ -112,6 +112,20 @@ services:
     depends_on:
       - admin
 
+  graphite-exporter:
+    image: prom/graphite-exporter
+    container_name: graphite-exporter
+    restart: always
+    command:
+      - "--graphite.mapping-config=/tmp/graphite_mapping.conf"
+    networks:
+      - default
+    ports:
+      - 9108:9108
+      - 9109:9109
+    volumes:
+      - ./config/graphite/graphite_mapping.conf:/tmp/graphite_mapping.conf
+
 networks:
   default:
     driver: bridge
