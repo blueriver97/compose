@@ -21,9 +21,9 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - victoriametrics-data:/victoriametrics-data # 영속적 데이터 저장
-      - ./logs:/victoriametrics-logs # 로그 저장
+      - ./config:/etc/prometheus
+      - ./logs:/victoriametrics-logs
+      - victoriametrics-data:/victoriametrics-data
 
 networks:
   default:
