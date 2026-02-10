@@ -76,7 +76,7 @@ AWS_ENDPOINT_URL_STS=http://minio-server:9000
 
 # Iceberg Catalog 설정
 CATALOG_NAME=polaris
-CATALOG_WAREHOUSE=s3://datalake/iceberg-warehouse
+CATALOG_WAREHOUSE=s3://datalake/iceberg
 ```
 
 #### 주의 사항
