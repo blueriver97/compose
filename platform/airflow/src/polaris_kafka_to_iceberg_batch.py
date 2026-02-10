@@ -247,8 +247,8 @@ if __name__ == "__main__":
         .config(f"spark.sql.catalog.{settings.CATALOG}", "org.apache.iceberg.spark.SparkCatalog")
         .config(f"spark.sql.catalog.{settings.CATALOG}.type", "rest")
         .config(f"spark.sql.catalog.{settings.CATALOG}.warehouse", "polaris")  # polaris catalog name
-        .config(f"spark.sql.catalog.{settings.CATALOG}.uri", "http://polaris:8181/api/catalog")
-        .config(f"spark.sql.catalog.{settings.CATALOG}.oauth2-server-uri", "http://polaris:8181/api/catalog/v1/oauth/tokens")
+        .config(f"spark.sql.catalog.{settings.CATALOG}.uri", "http://polaris.svc.internal:8181/api/catalog")
+        .config(f"spark.sql.catalog.{settings.CATALOG}.oauth2-server-uri", "http://polaris.svc.internal:8181/api/catalog/v1/oauth/tokens")
         .config(f"spark.sql.catalog.{settings.CATALOG}.header.Polaris-Realm", "default")
         .config(f"spark.sql.catalog.{settings.CATALOG}.header.X-Iceberg-Access-Delegation", "vended-credentials")
         .config(f"spark.sql.catalog.{settings.CATALOG}.credential", "root:polarisadmin")

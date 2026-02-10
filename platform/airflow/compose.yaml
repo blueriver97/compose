@@ -80,16 +80,15 @@ x-airflow-common: &airflow-common
     #############################################
     # 2026-01-10 확인. Spark-Submit 관련 ENV 수정 금지
     #############################################
-    # HADOOP_CONF_DIR: "/opt/hadoop/etc/hadoop"
-    # SPARK_HOME: "/opt/spark"
-    # PYSPARK_PYTHON: "./environment/bin/python"
-    #############################################
-    # 2026-01-10 확인. Spark-Submit 관련 ENV 수정 금지
-    #############################################
+    HADOOP_HOME: /opt/hadoop
+    HADOOP_CONF_DIR: /opt/hadoop/etc/hadoop
+    SPARK_HOME: /opt/spark
     S3_BUCKET: ${S3_BUCKET}
     AWS_ENDPOINT_URL_S3: ${AWS_ENDPOINT_URL_S3}
     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    YARN_RM1_ADDR: ${YARN_RM1_ADDR}
+    YARN_RM2_ADDR: ${YARN_RM2_ADDR}
   entrypoint:
     - /bin/bash
     - -c

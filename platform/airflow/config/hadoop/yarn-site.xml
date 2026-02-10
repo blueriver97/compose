@@ -21,27 +21,33 @@
     </property>
     <property>
         <name>yarn.resourcemanager.hostname.rm01</name>
-        <value>node01</value>
+        <!--value>node01</value-->
+        <value>$YARN_RM1_ADDR</value>
     </property>
     <property>
         <name>yarn.resourcemanager.hostname.rm02</name>
-        <value>node02</value>
+        <!--value>node02</value-->
+        <value>$YARN_RM2_ADDR</value>
     </property>
     <property>
         <name>yarn.resourcemanager.address.rm01</name>
-        <value>node01:8032</value>
+        <!--value>node01:8032</value-->
+        <value>$YARN_RM1_ADDR:8032</value>
     </property>
     <property>
         <name>yarn.resourcemanager.address.rm02</name>
-        <value>node02:8032</value>
+        <!--value>node02:8032</value-->
+        <value>$YARN_RM2_ADDR:8033</value>
     </property>
     <property>
         <name>yarn.resourcemanager.scheduler.address.rm01</name>
-        <value>node01:8030</value>
+        <!--value>node01:8030</value-->
+        <value>$YARN_RM1_ADDR:8030</value>
     </property>
     <property>
         <name>yarn.resourcemanager.scheduler.address.rm02</name>
-        <value>node02:8030</value>
+        <!--value>node02:8030</value-->
+        <value>$YARN_RM2_ADDR:8031</value>
     </property>
     <property>
         <name>yarn.resourcemanager.cluster-id</name>

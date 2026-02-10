@@ -15,6 +15,7 @@ echo "Starting Airflow recovery process..."
 if [ -f "$VARIABLE_FILE" ]; then
   echo "Restoring Airflow variables from $VARIABLE_FILE..."
   docker cp "$VARIABLE_FILE" airflow-apiserver:$TEMP_DIR/restore_variables.json
+  docker exec -u root airflow-apiserver chown airflow $TEMP_DIR/restore_variables.json
   docker exec airflow-apiserver airflow variables import $TEMP_DIR/restore_variables.json
   docker exec airflow-apiserver rm $TEMP_DIR/restore_variables.json
   echo "Variables restoration completed."
@@ -28,6 +29,7 @@ fi
 if [ -f "$CONNECTION_FILE" ]; then
   echo "Restoring Airflow connections from $CONNECTION_FILE..."
   docker cp "$CONNECTION_FILE" airflow-apiserver:$TEMP_DIR/restore_connections.json
+  docker exec -u root airflow-apiserver chown airflow $TEMP_DIR/restore_connections.json
   docker exec airflow-apiserver airflow connections import $TEMP_DIR/restore_connections.json
   docker exec airflow-apiserver rm $TEMP_DIR/restore_connections.json
   echo "Connections restoration completed."

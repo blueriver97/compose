@@ -20,6 +20,7 @@ HADOOP_CONF_DIR = Variable.get("HADOOP_CONF_DIR")
 SPARK_HOME = Variable.get("SPARK_HOME")
 PYSPARK_PYTHON = Variable.get("PYSPARK_PYTHON")
 SPARK_DIST_CLASSPATH = Variable.get("SPARK_DIST_CLASSPATH")
+ICEBERG_S3_ROOT_PATH = Variable.get("ICEBERG_S3_ROOT_PATH")
 
 ENV_VARS = {
     "VAULT_URL": VAULT_URL,
@@ -30,8 +31,9 @@ ENV_VARS = {
     "SPARK_HOME": SPARK_HOME,
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
     "SPARK_DIST_CLASSPATH": SPARK_DIST_CLASSPATH,
+    "ICEBERG_S3_ROOT_PATH": ICEBERG_S3_ROOT_PATH,
+    "AWS_PROFILE": "ap-northeast-2",
     "CATALOG": "glue_catalog",
-    "ICEBERG_S3_ROOT_PATH": "s3a://blueriver97-datalake/iceberg",
     "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",
 }
 
