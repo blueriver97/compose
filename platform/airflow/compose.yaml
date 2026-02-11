@@ -84,8 +84,12 @@ x-airflow-common: &airflow-common
     AWS_ENDPOINT_URL_S3: ${AWS_ENDPOINT_URL_S3}
     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-    YARN_RM1_ADDR: ${YARN_RM1_ADDR}
-    YARN_RM2_ADDR: ${YARN_RM2_ADDR}
+    YARN_RM_HOSTNAME_RM01: ${YARN_RM_HOSTNAME_RM01}
+    YARN_RM_HOSTNAME_RM02: ${YARN_RM_HOSTNAME_RM02}
+    YARN_RM_ADDRESS_RM01: ${YARN_RM_ADDRESS_RM01}
+    YARN_RM_ADDRESS_RM02: ${YARN_RM_ADDRESS_RM02}
+    YARN_RM_SCHEDULER_ADDRESS_RM01: ${YARN_RM_SCHEDULER_ADDRESS_RM01}
+    YARN_RM_SCHEDULER_ADDRESS_RM02: ${YARN_RM_SCHEDULER_ADDRESS_RM02}
   entrypoint:
     - /bin/bash
     - -c
@@ -231,6 +235,8 @@ services:
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       <<: *airflow-common-depends-on
       airflow-apiserver:
