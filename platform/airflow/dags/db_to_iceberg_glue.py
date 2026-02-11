@@ -32,7 +32,7 @@ ENV_VARS = {
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
     "SPARK_DIST_CLASSPATH": SPARK_DIST_CLASSPATH,
     "ICEBERG_S3_ROOT_PATH": ICEBERG_S3_ROOT_PATH,
-    "AWS_PROFILE": "ap-northeast-2",
+    "AWS_PROFILE": "dev",
     "CATALOG": "glue_catalog",
     "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",
 }
