@@ -1,4 +1,3 @@
-import os
 import json
 from textwrap import dedent
 
@@ -10,7 +9,7 @@ from pyspark.sql.avro.functions import from_avro
 from confluent_kafka.schema_registry import SchemaRegistryClient
 
 # --- Import common modules ---
-from utils.logging import setup_console_logging
+from utils.logging import SparkLoggerManager
 from utils.settings import Settings
 
 
@@ -125,18 +124,18 @@ def cast_dataframe(df: DataFrame, catalog_schema: T.StructType, debezium_dtypes:
 
 
 def process_table(
-    spark: SparkSession,
-    config: Settings,
-    schema: str,
-    table: str,
-    table_df: DataFrame,
-    parsed_debezium_schema: dict,
-    pk_cols: list,
+        spark: SparkSession,
+        config: Settings,
+        schema: str,
+        table: str,
+        table_df: DataFrame,
+        parsed_debezium_schema: dict,
+        pk_cols: list,
 ) -> None:
+    logger = SparkLoggerManager().get_logger()
+
     iceberg_schema, iceberg_table = f"{schema.lower()}_bronze", table.lower()
     full_table_name = f"{config.CATALOG}.{iceberg_schema}.{iceberg_table}"
-    logger = setup_console_logging(spark)
-
     catalog_schema = spark.table(full_table_name).schema
 
     cdc_df = table_df.withColumn("last_applied_date", F.col("__ts_ms")).withColumn(
@@ -185,9 +184,7 @@ def process_table(
 
 
 def process_batch(batch_df: DataFrame, batch_id: int, spark: SparkSession, config: Settings) -> None:
-    spark.sparkContext.setLogLevel("INFO")
-    logger = setup_console_logging(spark)
-
+    logger = SparkLoggerManager().get_logger()
     logger.info(f"<batch-{batch_id}, {batch_df.count()}>")
     if batch_df.isEmpty():
         return
@@ -246,7 +243,8 @@ if __name__ == "__main__":
         .config(f"spark.sql.catalog.{settings.CATALOG}.type", "rest")
         .config(f"spark.sql.catalog.{settings.CATALOG}.warehouse", "polaris")  # polaris catalog name
         .config(f"spark.sql.catalog.{settings.CATALOG}.uri", "http://polaris.svc.internal:8181/api/catalog")
-        .config(f"spark.sql.catalog.{settings.CATALOG}.oauth2-server-uri", "http://polaris.svc.internal:8181/api/catalog/v1/oauth/tokens")
+        .config(f"spark.sql.catalog.{settings.CATALOG}.oauth2-server-uri",
+                "http://polaris.svc.internal:8181/api/catalog/v1/oauth/tokens")
         .config(f"spark.sql.catalog.{settings.CATALOG}.header.Polaris-Realm", "default")
         .config(f"spark.sql.catalog.{settings.CATALOG}.header.X-Iceberg-Access-Delegation", "vended-credentials")
         .config(f"spark.sql.catalog.{settings.CATALOG}.credential", "root:polarisadmin")
@@ -261,6 +259,9 @@ if __name__ == "__main__":
         .config("spark.metrics.namespace", settings.METRIC_NAMESPACE)
         .getOrCreate()
     )
+
+    logger_manager = SparkLoggerManager()
+    logger_manager.setup(spark)
 
     schema_registry_client = SchemaRegistryClient({"url": settings.SCHEMA_REGISTRY})
     udf_byte2int = spark.udf.register("byte_to_int", lambda x: int.from_bytes(x, byteorder="big", signed=False))

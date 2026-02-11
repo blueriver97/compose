@@ -22,6 +22,7 @@ VAULT_SECRET_PATH = "secret/data/user/database/local-mysql"
 HADOOP_CONF_DIR = Variable.get("HADOOP_CONF_DIR")
 SPARK_HOME = Variable.get("SPARK_HOME")
 PYSPARK_PYTHON = Variable.get("PYSPARK_PYTHON")
+SPARK_DIST_CLASSPATH = Variable.get("SPARK_DIST_CLASSPATH")
 ICEBERG_S3_ROOT_PATH = Variable.get("ICEBERG_S3_ROOT_PATH")
 
 DAG_ID = "kafka_to_iceberg_polaris"
@@ -36,9 +37,9 @@ ENV_VARS = {
     "HADOOP_CONF_DIR": HADOOP_CONF_DIR,
     "SPARK_HOME": SPARK_HOME,
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
+    "SPARK_DIST_CLASSPATH": SPARK_DIST_CLASSPATH,
     "ICEBERG_S3_ROOT_PATH": ICEBERG_S3_ROOT_PATH,
     "CHECKPOINT_LOCATION": f"{ICEBERG_S3_ROOT_PATH}/checkpoint/{DAG_ID}",
-    "AWS_PROFILE": "us-east-1",
     "CATALOG": "polaris",
     "TOPIC_PREFIX": "local",
     "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",

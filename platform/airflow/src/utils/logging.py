@@ -1,29 +1,55 @@
-_LOGGING_INITIALIZED = False
+import threading
 
-def setup_console_logging(spark):
-    global _LOGGING_INITIALIZED
 
-    # 이미 설정되었다면 추가 호출 없이 반환
-    if _LOGGING_INITIALIZED:
-        return
+class SparkLoggerManager:
+    _instance = None
+    _lock = threading.Lock()
+    _initialized = False
+    _log_manager = None  # JVM LogManager 저장용
 
-    try:
-        jvm = spark._jvm
-        log_manager = jvm.org.apache.logging.log4j.LogManager
-        core_config = jvm.org.apache.logging.log4j.core.config.Configurator
-        level = jvm.org.apache.logging.log4j.Level
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            with cls._lock:
+                if not cls._instance:
+                    cls._instance = super(SparkLoggerManager, cls).__new__(cls)
+        return cls._instance
 
-        # 1. 모든 루트 로그 레벨을 INFO로 변경
-        # core_config.setRootLevel(level.INFO)
-        # 2. 특정 패키지 강제 설정
-        core_config.setLevel("org.apache.spark", level.INFO)
+    def setup(self, spark):
+        """Spark JVM을 통한 Log4j 초기화 및 매니저 로드"""
+        if self._initialized:
+            return
 
-        _LOGGING_INITIALIZED = True
-        logger = log_manager.getLogger(__name__)
-        print("Log4j 2 console logging has been force-enabled at INFO level.")
-    except Exception as e:
-        # 에러 발생 시 로그 출력 후 중단되지 않도록 처리
-        print(f"Failed to configure Log4j 2: {str(e)}")
-        logger = None
+        with self._lock:
+            if self._initialized:
+                return
 
-    return logger
+            try:
+                jvm = spark._jvm
+                self._log_manager = jvm.org.apache.logging.log4j.LogManager
+                configurator = jvm.org.apache.logging.log4j.core.config.Configurator
+                level = jvm.org.apache.logging.log4j.Level
+
+                # 로그 레벨 설정
+                configurator.setLevel("org.apache.spark", level.INFO)
+
+                self._initialized = True
+                print("SparkLoggerManager: Log4j 2 has been initialized.")
+            except Exception as e:
+                print(f"Error: Failed to setup Log4j 2. Detail: {str(e)}")
+
+    def get_logger(self, name=None):
+        """JVM 로거 객체 반환"""
+        if not self._initialized or self._log_manager is None:
+            print("Warning: SparkLoggerManager not initialized. Call setup(spark) first.")
+            return None
+
+        # 이름이 없으면 현재 파일명 등을 사용
+        logger_name = name if name else __name__
+        # JVM의 getLogger 호출
+        return self._log_manager.getLogger(logger_name)
+
+# 사용 예시
+# manager = SparkLoggerManager()
+# manager.setup(spark)
+# logger = manager.get_logger("MySparkApp")
+# logger.info("This is an INFO level log from PySpark")
