@@ -145,7 +145,7 @@ if __name__ == "__main__":
     settings.init_vault()
 
     spark = (
-        SparkSession.builder.appName("MySQLToIceberg")
+        SparkSession.builder.appName("mysql_to_iceberg")
         .config("spark.sql.defaultCatalog", settings.CATALOG)
         .config(f"spark.sql.catalog.{settings.CATALOG}", "org.apache.polaris.spark.SparkCatalog")
         .config(f"spark.sql.catalog.{settings.CATALOG}.type", "rest")
