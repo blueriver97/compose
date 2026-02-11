@@ -3,6 +3,7 @@ services:
     image: confluentinc/cp-kafka:${KAFKA_VERSION}
     container_name: controller
     hostname: controller
+    restart: always
     environment:
       CLUSTER_ID: ${CLUSTER_ID}
       KAFKA_NODE_ID: 1
