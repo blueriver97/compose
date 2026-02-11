@@ -3,6 +3,7 @@ services:
   polaris-postgres:
     image: postgres:16
     container_name: polaris-postgres
+    restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -46,6 +47,7 @@ services:
         condition: service_healthy
       polaris-bootstrap:
         condition: service_completed_successfully
+    restart: always
     environment:
       JAVA_DEBUG: true
       JAVA_DEBUG_PORT: "*:5005"
@@ -303,6 +305,7 @@ services:
     depends_on:
       polaris-setup:
         condition: service_completed_successfully
+    restart: always
     environment:
       CLIENT_ID: ${ROOT_CLIENT_ID}
       CLIENT_SECRET: ${ROOT_CLIENT_SECRET}
