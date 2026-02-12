@@ -20,7 +20,7 @@ docker exec admin hadoop fs -mkdir -p $S3_BUCKET/spark/jars
 python3 -m venv /opt/pyspark_venv
 source /opt/pyspark_venv/bin/activate
 (pyspark_venv) pip install -U pip setuptools wheel
-(pyspark_venv) pip install pyarrow pandas pydantic pydantic_settings PyMySQL hvac venv-pack confluent-kafka
+(pyspark_venv) pip install pyarrow pandas pydantic-core pydantic pydantic_settings PyMySQL hvac venv-pack confluent-kafka
 (pyspark_venv) pip install boto3 attrs orjson httpx cachetools authlib
 (pyspark_venv) venv-pack -o /opt/pyspark_venv.tar.gz
 ```
@@ -90,13 +90,18 @@ Yarn 관련 작업에서만 core-site.xml에 작성된 AWS 인증 정보를 참�
    4. credentials및 config파일 내 `[default]` 프로필 (`~/.aws/credentials`, `~/.aws/config`)
    5. Amazon ECS 컨테이너 자격 증명
    6. Amazon EC2 인스턴스 IAM 역할에서 제공하는 자격 증명
+
    ```plain
    software.amazon.awssdk.core.exception.SdkClientException: Unable to load credentials from any of the providers
    in the chain AwsCredentialsProviderChain(credentialsProviders=[SystemPropertyCredentialsProvider(),
    EnvironmentVariableCredentialsProvider(), WebIdentityTokenCredentialsProvider(), ProfileCredentialsProvider(),
    ContainerCredentialsProvider(), InstanceProfileCredentialsProvider()])
    ```
+
    모든 과정 실패 시 위와 같은 오류 발생
+
+   Airflow와 연계하는 경우, AWS 자격 증명(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)을 Airflow에서 Env로 전달할 필요는 없으며,
+   스파크 클러스터의 [default] 영역을 사용할 AWS 인증에 맞게 구성 필요.
 
 ## 트러블슈팅(Troubleshooting)
 
@@ -306,7 +311,8 @@ checkpoint/
 
 - Kafka에서 메시지를 읽어 Spark Streaming으로 처리할 때 발생하는 오류로, offset과 commit의 시퀀스 불일치가 주요 원인이다.
 - **배치 시작 단계**: Spark는 Kafka에서 읽어올 시작 오프셋과 종료 오프셋을 결정한다. 이 정보는 체크포인트 디렉토리의 `offsets/` 폴더에 배치 번호(예: 284)로 기록된다.
-- **데이터 처리 단계**: 설정된 오프셋 범위만큼 Kafka에서 데이터를 가져와 변환 작업을 수행한 후 저장소에 저장한다. 저장이 완료되면 `commits/` 폴더에 동일한 배치 번호(284) 파일을 생성하여 처리 완료를 표시한다.
+- **데이터 처리 단계**: 설정된 오프셋 범위만큼 Kafka에서 데이터를 가져와 변환 작업을 수행한 후 저장소에 저장한다. 저장이 완료되면 `commits/` 폴더에 동일한 배치 번호(284) 파일을 생성하여
+  처리 완료를 표시한다.
 - **오류 발생 조건**: `offsets/`에 기록되지 않은 배치 번호가 `commits/`에만 존재할 경우 이 오류가 발생한다. 이는 동일한 배치에 대해 중복된 스트리밍 작업이 감지되었음을 의미한다.
 - **재처리 메커니즘**: `offsets/`에는 존재하지만 `commits/`에는 없는 배치의 경우, Spark는 해당 오프셋 구간을 재처리하고 완료 후 `commits/`에 기록한다.
 
