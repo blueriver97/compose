@@ -374,6 +374,7 @@ services:
       SCHEMA_REGISTRY_URL: http://datahub-gms:8080/schema-registry/api/
       UV_INDEX_URL: https://nexus.hunet.tech/repository/pypi-remote/simple
       DATAHUB_TELEMETRY_ENABLED: "false"
+      AWS_DEFAULT_REGION: "ap-northeast-2"
     networks:
       default: null
     volumes:
