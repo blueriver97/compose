@@ -123,6 +123,48 @@ Yarn 관련 작업에서만 core-site.xml에 작성된 AWS 인증 정보를 참�
    )
    ```
 
+4. AWS IAM 설정
+   1. AmazonS3FullAccess
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": ["s3:*", "s3-object-lambda:*"],
+         "Resource": "*"
+       }
+     ]
+   }
+   ```
+
+   2. Glue
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "GlueTableManagement",
+         "Effect": "Allow",
+         "Action": [
+           "glue:GetDatabase",
+           "glue:GetTable",
+           "glue:CreateTable",
+           "glue:GetPartitions",
+           "glue:UpdateTable"
+         ],
+         "Resource": [
+           "arn:aws:glue:ap-northeast-2:************:catalog",
+           "arn:aws:glue:ap-northeast-2:************:database/*",
+           "arn:aws:glue:ap-northeast-2:************:table/*/*"
+         ]
+       }
+     ]
+   }
+   ```
+
 ## 트러블슈팅(Troubleshooting)
 
 ---
