@@ -1,4 +1,14 @@
 {
+  "datahub_rest_default": {
+    "conn_type": "datahub-rest",
+    "description": "Datahub Rest Sink (Password: PAT)",
+    "login": null,
+    "password": "",
+    "host": "datahub.svc.internal:8080",
+    "port": null,
+    "schema": null,
+    "extra": null
+  },
   "spark_default": {
     "conn_type": "spark",
     "description": null,
