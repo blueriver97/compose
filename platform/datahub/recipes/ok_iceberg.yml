@@ -1,0 +1,23 @@
+source:
+  type: "iceberg"
+  config:
+    catalog:
+      glue_catalog:
+        type: "glue"
+        warehouse: "s3://datalake/iceberg/"
+        s3.region: ${AWS_DEFAULT_REGION}
+        s3.access-key-id: ${AWS_ACCESS_KEY_ID}
+        s3.secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+    stateful_ingestion:
+      enabled: true
+      remove_stale_metadata: true
+
+datahub_api:
+  server: "http://datahub-gms:8080"
+  token: ${TOKEN}
+
+sink:
+  type: "datahub-rest"
+  config:
+    server: "http://datahub-gms:8080"
+    token: ${TOKEN}

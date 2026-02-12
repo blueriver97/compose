@@ -2,7 +2,6 @@ pipeline_name: minio-source
 source:
   type: s3
   config:
-    env: DEV
     platform_instance: minio-datalake
     aws_config:
       aws_region: ap-northeast-2 # 임의 값, MinIO는 실제 리전을 사용하지 않아도 무방

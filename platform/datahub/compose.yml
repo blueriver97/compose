@@ -16,8 +16,8 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
       KAFKA_LOG4J_LOGGERS: org.apache.kafka.image.loader.MetadataLoader=WARN
       KAFKA_HEAP_OPTS: -Xms512m -Xmx512m
-      KAFKA_MAX_MESSAGE_BYTES: "5242880"
-      KAFKA_MESSAGE_MAX_BYTES: "5242880"
+      KAFKA_MAX_MESSAGE_BYTES: "20971520" # 20MB
+      KAFKA_MESSAGE_MAX_BYTES: "20971520" # 20MB
       KAFKA_NODE_ID: "1"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
       KAFKA_PROCESS_ROLES: controller, broker
@@ -378,6 +378,7 @@ services:
       default: null
     volumes:
       - ./recipes:/home/datahub/recipes
+      - ./pip:/home/datahub/.pip
 
 networks:
   default:

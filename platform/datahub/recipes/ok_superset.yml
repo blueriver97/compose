@@ -1,0 +1,25 @@
+pipeline_name: superset
+source:
+  type: superset
+  config:
+    platform_instance: "superset"
+    connect_uri: http://superset.svc.internal:8088
+    username: ${USERNAME}
+    password: ${PASSWORD}
+    provider: "db" # "ldap"
+    ingest_dashboards: true
+    ingest_charts: false
+    ingest_datasets: false
+    stateful_ingestion:
+      enabled: true
+      remove_stale_metadata: true
+
+datahub_api:
+  server: "http://datahub-gms:8080"
+  token: "${TOKEN}"
+
+sink:
+  type: datahub-rest
+  config:
+    server: "http://datahub-gms:8080"
+    token: "${TOKEN}"

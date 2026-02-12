@@ -2,7 +2,6 @@ pipeline_name: s3-source
 source:
   type: s3
   config:
-    env: DEV
     platform_instance: s3-datalake
     aws_config:
       aws_region: ap-northeast-2

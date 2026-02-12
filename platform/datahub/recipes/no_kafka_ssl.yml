@@ -1,17 +1,15 @@
-pipeline_name: kafka-source
+pipeline_name: Kafka
 source:
   type: kafka
   config:
-    env: DEV
     connection:
-      bootstrap: broker:29092
+      bootstrap: kafka.svc.internal:9092
       consumer_config:
-        # security.protocol: PLAINTEXT
         security.protocol: SASL_SSL
-        sasl.mechanism: PLAIN
+        sasl.mechanism: SCRAM-SHA-512
         sasl.username: ${USERNAME}
         sasl.password: ${PASSWORD}
-      schema_registry_url: http://schema-registry:8081
+      schema_registry_url: "http://schema-registry.svc.internal:8081"
       schema_registry_config:
         basic.auth.user.info: "<api-key>:<api-secret>"
     stateful_ingestion:
@@ -19,9 +17,11 @@ source:
       remove_stale_metadata: true
 
 datahub_api:
-  server: http://datahub-gms:8080
+  server: "http://datahub-gms:8080"
+  token: "${TOKEN}"
 
 sink:
   type: datahub-rest
   config:
-    server: http://datahub-gms:8080
+    server: "http://datahub-gms:8080"
+    token: "${TOKEN}"

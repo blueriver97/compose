@@ -1,8 +1,7 @@
-pipeline_name: mysql-source
+pipeline_name: mysql
 source:
   type: mysql
   config:
-    env: DEV
     platform_instance: data-pipeline
     host_port: ${MYSQL_HOST}:3306
     username: ${USERNAME}
@@ -32,9 +31,11 @@ source:
       remove_stale_metadata: true
 
 datahub_api:
-  server: http://datahub-gms:8080
+  server: "http://datahub-gms:8080"
+  token: "${TOKEN}"
 
 sink:
   type: datahub-rest
   config:
-    server: http://datahub-gms:8080
+    server: "http://datahub-gms:8080"
+    token: "${TOKEN}"
