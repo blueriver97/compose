@@ -146,7 +146,6 @@ if __name__ == "__main__":
     settings.init_vault()
 
     os.environ["AWS_PROFILE"] = settings.AWS_PROFILE
-    print(os.getenv("AWS_PROFILE"))
 
     spark = (
         SparkSession.builder.appName("mysql_to_iceberg")

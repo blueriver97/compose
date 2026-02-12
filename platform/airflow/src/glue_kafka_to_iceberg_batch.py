@@ -248,7 +248,7 @@ if __name__ == "__main__":
 
     settings = Settings()
     os.environ["AWS_PROFILE"] = settings.AWS_PROFILE
-    print(os.getenv("AWS_PROFILE"))
+
     spark = (
         SparkSession.builder.appName("kafka_to_iceberg_cdc")
         .config("spark.sql.defaultCatalog", settings.CATALOG)
