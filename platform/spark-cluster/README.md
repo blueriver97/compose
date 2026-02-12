@@ -100,8 +100,28 @@ Yarn 관련 작업에서만 core-site.xml에 작성된 AWS 인증 정보를 참�
 
    모든 과정 실패 시 위와 같은 오류 발생
 
-   Airflow와 연계하는 경우, AWS 자격 증명(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)을 Airflow에서 Env로 전달할 필요는 없으며,
-   스파크 클러스터의 [default] 영역을 사용할 AWS 인증에 맞게 구성 필요.
+3. `AWS_PROFILE` 환경 변수를 통한 선택적 인증 방법
+
+   선행 조건: AWS 자격 증명(~/.aws/credentials, ~/.aws/config)이 각 노드에 이미 설정 완료되어 있어야 함.
+
+   Airflow에서 SparkSubmitOperator를 통해 Yarn 클러스터로 작업을 제출하는 경우, SPARK_CONF에 AWS_PROFILE을 지정하면 각 노드에서 해당 프로필을 찾아 인증에 사용한다.
+
+   ```python
+   submit_job = SparkSubmitOperator(
+       conn_id="spark_default",
+       task_id="submit_spark_job",
+       spark_binary="/opt/spark/bin/spark-submit",
+       name=DAG_ID,
+       deploy_mode="cluster",
+       application="/opt/airflow/src/glue_mysql_to_iceberg.py",
+       py_files="/opt/airflow/src/utils.zip",
+       conf={
+           "spark.yarn.appMasterEnv.AWS_PROFILE": "prod",
+           "spark.executorEnv.AWS_PROFILE": "prod"
+       },
+       env_vars=ENV_VARS
+   )
+   ```
 
 ## 트러블슈팅(Troubleshooting)
 
