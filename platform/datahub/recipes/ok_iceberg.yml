@@ -1,11 +1,13 @@
+# 필수 조건 (둘 중 하나 만족 필요)
+# 1) datahub-actions 컨테이너 내, /home/datahub/.aws/[config, credentials] 설정이 되어야 함.
+# 2) AWS_DEFAULT_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY 환경 변수 설정이 되어있어야 함.
+# 주의) recipe에 적는 region, aws key는 동작하지 않으므로 작성할 필요 없음.
 source:
   type: iceberg
   config:
     catalog:
-      demo:
+      my_catalog:
         type: glue
-        s3.region: ap-northeast-2
-        region_name: ap-northeast-2
         namespace_pattern:
           allow: ["*"]
         table_pattern:
@@ -13,9 +15,11 @@ source:
         stateful_ingestion:
           enabled: true
           remove_stale_metadata: true
+
 datahub_api:
   server: "http://datahub-gms:8080"
   token: "${TOKEN}"
+
 sink:
   type: datahub-rest
   config:

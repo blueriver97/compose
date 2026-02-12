@@ -1,0 +1,27 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "GlueTableManagement",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetDatabase*",
+        "glue:CreateDatabase",
+        "glue:GetTable*",
+        "glue:CreateTable",
+        "glue:UpdateTable",
+        "glue:GetPartitions"
+      ],
+      "Resource": [
+        "arn:aws:glue:ap-northeast-2:*:catalog",
+        "arn:aws:glue:ap-northeast-2:*:database/*",
+        "arn:aws:glue:ap-northeast-2:*:table/*/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceAccount": "${aws:PrincipalAccount}"
+        }
+      }
+    }
+  ]
+}

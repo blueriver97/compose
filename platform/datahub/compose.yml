@@ -252,7 +252,7 @@ services:
       ELASTIC_CLIENT_HOST: elasticsearch
       ELASTIC_CLIENT_PORT: "9200"
       JAVA_OPTS:
-        -Xms512m -Xmx512m -Dhttp.port=9002 -Dconfig.file=datahub-frontend/conf/application.conf -Djava.security.auth.login.config=datahub-frontend/conf/jaas.conf
+        -Xms512m -Xmx512m -Dhttp.port=9002 -Dconfig.file=datahub-frontend/conf/application.conf -Djava.security.auth.login.config=datahub-frontend/conf/auth/jaas.conf
         -Dlogback.configurationFile=datahub-frontend/conf/logback.xml -Dlogback.debug=false -Dpidfile.path=/dev/null
       KAFKA_BOOTSTRAP_SERVER: broker:29092
       PLAY_HTTP_CONTEXT: /
@@ -265,7 +265,7 @@ services:
       - 9002:9002
     volumes:
       - ./datahub/plugins:/etc/datahub/plugins
-      - ./auth/jaas.conf:/datahub-frontend/conf/jaas.conf
+      - ./config/auth:/datahub-frontend/conf/auth
 
   datahub-gms:
     image: acryldata/datahub-gms:${DATAHUB_VERSION}
@@ -374,12 +374,14 @@ services:
       SCHEMA_REGISTRY_URL: http://datahub-gms:8080/schema-registry/api/
       UV_INDEX_URL: https://nexus.hunet.tech/repository/pypi-remote/simple
       DATAHUB_TELEMETRY_ENABLED: "false"
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     networks:
       default: null
     volumes:
       - ./recipes:/home/datahub/recipes
-      - ./pip:/home/datahub/.pip
-      - $HOME/.aws:/home/datahub/.aws
+      #- ./config/pip:/home/datahub/.pip
 
 networks:
   default:
