@@ -2,19 +2,9 @@ import datetime
 from airflow.models import DAG, Variable
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-# Spark 설정
-SPARK_CONF = {
-    "spark.yarn.maxAppAttempts": "1",
-    "spark.driver.cores": "1",
-    "spark.driver.memory": "1G",
-    "spark.executor.cores": "1",
-    "spark.executor.memory": "1G",
-    "spark.executor.instances": "1",
-}
+DAG_ID = "glue_mysql_to_iceberg"
 
 # 환경 변수
-BOOTSTRAP_SERVERS = Variable.get("BOOTSTRAP_SERVERS")
-SCHEMA_REGISTRY = Variable.get("SCHEMA_REGISTRY")
 VAULT_URL = Variable.get("VAULT_URL")
 VAULT_USERNAME = Variable.get("VAULT_USERNAME")
 VAULT_PASSWORD = Variable.get("VAULT_PASSWORD")
@@ -24,12 +14,9 @@ SPARK_HOME = Variable.get("SPARK_HOME")
 PYSPARK_PYTHON = Variable.get("PYSPARK_PYTHON")
 SPARK_DIST_CLASSPATH = Variable.get("SPARK_DIST_CLASSPATH")
 ICEBERG_S3_ROOT_PATH = Variable.get("ICEBERG_S3_ROOT_PATH")
+AWS_PROFILE = Variable.get("AWS_PROFILE")
 
-DAG_ID = "kafka_to_iceberg_polaris"
 ENV_VARS = {
-    "BOOTSTRAP_SERVERS": BOOTSTRAP_SERVERS,
-    "SCHEMA_REGISTRY": SCHEMA_REGISTRY,
-    "METRIC_NAMESPACE": DAG_ID,
     "VAULT_URL": VAULT_URL,
     "VAULT_USERNAME": VAULT_USERNAME,
     "VAULT_PASSWORD": VAULT_PASSWORD,
@@ -39,29 +26,38 @@ ENV_VARS = {
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
     "SPARK_DIST_CLASSPATH": SPARK_DIST_CLASSPATH,
     "ICEBERG_S3_ROOT_PATH": ICEBERG_S3_ROOT_PATH,
-    "CHECKPOINT_LOCATION": f"{ICEBERG_S3_ROOT_PATH}/checkpoint/{DAG_ID}",
-    "CATALOG": "polaris",
-    "TOPIC_PREFIX": "local",
+    "CATALOG": "glue_catalog",
     "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",
 }
 
-# DAG 정의
+# Spark 설정
+SPARK_CONF = {
+    "spark.yarn.maxAppAttempts": "1",
+    "spark.driver.cores": "1",
+    "spark.driver.memory": "1G",
+    "spark.executor.cores": "1",
+    "spark.executor.memory": "1G",
+    "spark.executor.instances": "1",
+    "spark.yarn.appMasterEnv.AWS_PROFILE": AWS_PROFILE,
+    "spark.executorEnv.AWS_PROFILE": AWS_PROFILE
+}
+
 with DAG(
         dag_id=DAG_ID,
-        description="Batch job to process Kafka topics and write to Iceberg using Spark",
-        start_date=datetime.datetime(2025, 9, 21),
+        description="Batch job to process DB tables and write to Iceberg using Spark",
+        start_date=datetime.datetime(2026, 1, 1),
         schedule=None,
         catchup=False,
         max_active_runs=1,
         tags=[],
 ) as dag:
-    submit_spark_job = SparkSubmitOperator(
+    submit_job = SparkSubmitOperator(
         conn_id="spark_default",
         task_id="submit_spark_job",
         spark_binary="/opt/spark/bin/spark-submit",
         name=DAG_ID,
         deploy_mode="cluster",
-        application="/opt/airflow/src/polaris_kafka_to_iceberg_batch.py",
+        application="/opt/airflow/src/glue_mysql_to_iceberg.py",
         py_files="/opt/airflow/src/utils.zip",
         conf=SPARK_CONF,
         env_vars=ENV_VARS

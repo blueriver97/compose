@@ -2,7 +2,7 @@ import datetime
 from airflow.models import DAG, Variable
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-DAG_ID = "kafka_to_iceberg_glue"
+DAG_ID = "polaris_kafka_to_iceberg"
 
 # 환경 변수
 BOOTSTRAP_SERVERS = Variable.get("BOOTSTRAP_SERVERS")
@@ -14,8 +14,8 @@ VAULT_SECRET_PATH = "secret/data/user/database/local-mysql"
 HADOOP_CONF_DIR = Variable.get("HADOOP_CONF_DIR")
 SPARK_HOME = Variable.get("SPARK_HOME")
 PYSPARK_PYTHON = Variable.get("PYSPARK_PYTHON")
+SPARK_DIST_CLASSPATH = Variable.get("SPARK_DIST_CLASSPATH")
 ICEBERG_S3_ROOT_PATH = Variable.get("ICEBERG_S3_ROOT_PATH")
-AWS_PROFILE = Variable.get("AWS_PROFILE")
 
 ENV_VARS = {
     "BOOTSTRAP_SERVERS": BOOTSTRAP_SERVERS,
@@ -28,9 +28,10 @@ ENV_VARS = {
     "HADOOP_CONF_DIR": HADOOP_CONF_DIR,
     "SPARK_HOME": SPARK_HOME,
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
+    "SPARK_DIST_CLASSPATH": SPARK_DIST_CLASSPATH,
     "ICEBERG_S3_ROOT_PATH": ICEBERG_S3_ROOT_PATH,
     "CHECKPOINT_LOCATION": f"{ICEBERG_S3_ROOT_PATH}/checkpoint/{DAG_ID}",
-    "CATALOG": "glue_catalog",
+    "CATALOG": "polaris",
     "TOPIC_PREFIX": "local",
     "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",
 }
@@ -43,8 +44,6 @@ SPARK_CONF = {
     "spark.executor.cores": "1",
     "spark.executor.memory": "1G",
     "spark.executor.instances": "1",
-    "spark.yarn.appMasterEnv.AWS_PROFILE": AWS_PROFILE,
-    "spark.executorEnv.AWS_PROFILE": AWS_PROFILE
 }
 
 # DAG 정의
