@@ -2,16 +2,6 @@ import datetime
 from airflow.models import DAG, Variable
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-# Spark 설정
-SPARK_CONF = {
-    "spark.yarn.maxAppAttempts": "1",
-    "spark.driver.cores": "1",
-    "spark.driver.memory": "1G",
-    "spark.executor.cores": "1",
-    "spark.executor.memory": "1G",
-    "spark.executor.instances": "1",
-}
-
 VAULT_URL = Variable.get("VAULT_URL")
 VAULT_USERNAME = Variable.get("VAULT_USERNAME")
 VAULT_PASSWORD = Variable.get("VAULT_PASSWORD")
@@ -21,6 +11,7 @@ SPARK_HOME = Variable.get("SPARK_HOME")
 PYSPARK_PYTHON = Variable.get("PYSPARK_PYTHON")
 SPARK_DIST_CLASSPATH = Variable.get("SPARK_DIST_CLASSPATH")
 ICEBERG_S3_ROOT_PATH = Variable.get("ICEBERG_S3_ROOT_PATH")
+AWS_PROFILE = Variable.get("AWS_PROFILE")
 
 ENV_VARS = {
     "VAULT_URL": VAULT_URL,
@@ -32,11 +23,21 @@ ENV_VARS = {
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
     "SPARK_DIST_CLASSPATH": SPARK_DIST_CLASSPATH,
     "ICEBERG_S3_ROOT_PATH": ICEBERG_S3_ROOT_PATH,
-    "AWS_PROFILE": "kimyj",
     "CATALOG": "glue_catalog",
     "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",
 }
-print(ENV_VARS)
+
+# Spark 설정
+SPARK_CONF = {
+    "spark.yarn.maxAppAttempts": "1",
+    "spark.driver.cores": "1",
+    "spark.driver.memory": "1G",
+    "spark.executor.cores": "1",
+    "spark.executor.memory": "1G",
+    "spark.executor.instances": "1",
+    "spark.yarn.appMasterEnv.AWS_PROFILE": AWS_PROFILE,
+    "spark.executorEnv.AWS_PROFILE": AWS_PROFILE
+}
 
 DAG_ID = "db_to_iceberg_glue"
 with DAG(

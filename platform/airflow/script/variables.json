@@ -3,6 +3,7 @@
   "SPARK_HOME": "/opt/spark",
   "PYSPARK_PYTHON": "./environment/bin/python",
   "SPARK_DIST_CLASSPATH": "/opt/hadoop/etc/hadoop:/opt/hadoop/share/hadoop/common/lib/*:/opt/hadoop/share/hadoop/common/*:/opt/hadoop/share/hadoop/tools/lib/bundle-2.29.52.jar:/opt/hadoop/share/hadoop/tools/lib/analyticsaccelerator-s3-1.2.1.jar:/opt/hadoop/share/hadoop/tools/lib/hadoop-aws-3.4.2.jar:/opt/hadoop/share/hadoop/hdfs:/opt/hadoop/share/hadoop/hdfs/lib/*:/opt/hadoop/share/hadoop/hdfs/*:/opt/hadoop/share/hadoop/tools/lib/kafka-clients-3.9.0.jar:/opt/hadoop/share/hadoop/tools/lib/hadoop-kafka-3.4.2.jar:/opt/hadoop/share/hadoop/mapreduce/*:/opt/hadoop/share/hadoop/yarn:/opt/hadoop/share/hadoop/yarn/lib/*:/opt/hadoop/share/hadoop/yarn/*",
+  "AWS_PROFILE": "dev",
   "AWS_ACCESS_KEY_ID": "minioadmin",
   "AWS_SECRET_ACCESS_KEY": "minioadmin",
   "ICEBERG_S3_ROOT_PATH": "s3a://datalake/iceberg",

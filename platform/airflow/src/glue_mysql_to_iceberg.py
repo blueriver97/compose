@@ -1,4 +1,3 @@
-import os
 from typing import Dict, List
 
 import pyspark.sql.functions as F
@@ -145,8 +144,6 @@ if __name__ == "__main__":
     settings = Settings()
     settings.init_vault()
 
-    os.environ["AWS_PROFILE"] = settings.AWS_PROFILE
-
     spark = (
         SparkSession.builder.appName("mysql_to_iceberg")
         .config("spark.sql.defaultCatalog", settings.CATALOG)
@@ -155,7 +152,8 @@ if __name__ == "__main__":
         .config(f"spark.sql.catalog.{settings.CATALOG}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
         .config(f"spark.sql.catalog.{settings.CATALOG}.warehouse", settings.ICEBERG_S3_ROOT_PATH)
         .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider")
+        .config("spark.hadoop.fs.s3a.aws.credentials.provider",
+                "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider")
         .config("spark.sql.caseSensitive", "true")
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.optimizer.excludedRules", "org.apache.spark.sql.catalyst.optimizer.SimplifyCasts")

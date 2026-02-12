@@ -247,7 +247,6 @@ if __name__ == "__main__":
     # settings = Settings(_env_file="src/dev.env", _env_file_encoding="utf-8")
 
     settings = Settings()
-    os.environ["AWS_PROFILE"] = settings.AWS_PROFILE
 
     spark = (
         SparkSession.builder.appName("kafka_to_iceberg_cdc")
