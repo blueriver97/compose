@@ -38,7 +38,7 @@ ENV_VARS = {
     "PYSPARK_PYTHON": PYSPARK_PYTHON,
     "ICEBERG_S3_ROOT_PATH": ICEBERG_S3_ROOT_PATH,
     "CHECKPOINT_LOCATION": f"{ICEBERG_S3_ROOT_PATH}/checkpoint/{DAG_ID}",
-    "AWS_PROFILE": "ap-northeast-2",
+    "AWS_PROFILE": "kimyj",
     "CATALOG": "glue_catalog",
     "TOPIC_PREFIX": "local",
     "TABLES": "store.tb_lower,store.TB_UPPER,store.TB_COMPOSITE_KEY",

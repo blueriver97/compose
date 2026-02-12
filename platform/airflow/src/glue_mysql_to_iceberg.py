@@ -40,7 +40,7 @@ def process_single_table(spark: SparkSession, config: Settings, table_name: str,
         bounds = bound_df.first()
 
         if not bounds or bounds["lower"] is None:
-            logger.warning(
+            logger.warn(
                 f"Partition column '{partition_column}' has no data for table '{table_name}'. Reading without partitioning.")
             jdbc_df = spark.read.format("jdbc").options(**jdbc_options).option("dbtable", table_name).load()
         else:
@@ -134,7 +134,7 @@ def main(spark: SparkSession, config: Settings) -> None:
 
     if failed_tables:
         for fail in failed_tables:
-            logger.warning(f"Failed Table: {fail['table']} | Reason: {fail['error']}")
+            logger.warn(f"Failed Table: {fail['table']} | Reason: {fail['error']}")
 
         raise RuntimeError(f"Process finished with {len(failed_tables)} failures.")
 
@@ -146,6 +146,7 @@ if __name__ == "__main__":
     settings.init_vault()
 
     os.environ["AWS_PROFILE"] = settings.AWS_PROFILE
+    print(os.getenv("AWS_PROFILE"))
 
     spark = (
         SparkSession.builder.appName("mysql_to_iceberg")
@@ -155,7 +156,7 @@ if __name__ == "__main__":
         .config(f"spark.sql.catalog.{settings.CATALOG}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
         .config(f"spark.sql.catalog.{settings.CATALOG}.warehouse", settings.ICEBERG_S3_ROOT_PATH)
         .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider")
         .config("spark.sql.caseSensitive", "true")
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.optimizer.excludedRules", "org.apache.spark.sql.catalyst.optimizer.SimplifyCasts")

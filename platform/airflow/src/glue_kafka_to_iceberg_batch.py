@@ -248,7 +248,7 @@ if __name__ == "__main__":
 
     settings = Settings()
     os.environ["AWS_PROFILE"] = settings.AWS_PROFILE
-
+    print(os.getenv("AWS_PROFILE"))
     spark = (
         SparkSession.builder.appName("kafka_to_iceberg_cdc")
         .config("spark.sql.defaultCatalog", settings.CATALOG)
@@ -258,7 +258,7 @@ if __name__ == "__main__":
         .config(f"spark.sql.catalog.{settings.CATALOG}.warehouse", settings.ICEBERG_S3_ROOT_PATH)
         .config(f"spark.sql.catalog.{settings.CATALOG}.s3.path-style-access", True)
         .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+        .config("spark.hadoop.fs.s3a.aws.credentials.provider", "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider")
         .config("spark.rdd.compress", True)
         .config("spark.sql.caseSensitive", True)
         .config("spark.sql.session.timeZone", "UTC")
