@@ -42,6 +42,7 @@ declare -a jar_urls=(
     "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar"
     "https://repo1.maven.org/maven2/org/apache/polaris/polaris-spark-3.5_2.13/1.2.0-incubating/polaris-spark-3.5_2.13-1.2.0-incubating.jar"
     "https://repo1.maven.org/maven2/org/apache/polaris/polaris-core/1.2.0-incubating/polaris-core-1.2.0-incubating.jar"
+    "https://repo1.maven.org/maven2/io/openlineage/openlineage-spark_2.13/1.43.0/openlineage-spark_2.13-1.43.0.jar"
 )
 
 

@@ -3,12 +3,6 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-# DataHub 플러그인 임포트
-try:
-    from datahub_airflow_plugin.entities import Dataset
-except ImportError:
-    from datahub_provider.entities import Dataset
-
 # DAG ID
 DAG_ID = "lineage_airflow_to_spark_dag"
 
@@ -59,47 +53,51 @@ SPARK_CONF = {
     # OpenLineage Spark Listener 설정
     "spark.jars.packages": "io.openlineage:openlineage-spark_2.13:1.43.0",
     "spark.extraListeners": "io.openlineage.spark.agent.OpenLineageSparkListener",
+
+
     "spark.openlineage.transport.type": "http",
     "spark.openlineage.transport.url": DATAHUB_GMS_URL,
-    "spark.openlineage.transport.endpoint": "/api/v1/lineage",
+    "spark.openlineage.transport.endpoint": "/openapi/openlineage/api/v1/lineage",
     "spark.openlineage.transport.auth.type": "api_key",
     "spark.openlineage.transport.auth.apiKey": DATAHUB_TOKEN,
-    "spark.openlineage.namespace": "production_cluster"
+
+    "spark.openlineage.namespace": "production_cluster",
+    "spark.openlineage.parentJobNamespace": "production_cluster"
 }
 
 
 # 2. Outlets 생성을 위한 헬퍼 함수
-def generate_outlets(tables_str, catalog):
-    """
-    입력된 테이블 문자열을 파싱하여 DataHub Dataset 객체 리스트를 반환합니다.
-    Spark Job 로직(glue_mysql_to_iceberg.py)에 따라 대상 테이블 이름을 변환합니다.
-    변환 규칙: {catalog}.{schema}_bronze.{table} (소문자 변환)
-    """
-    datasets = []
-    if not tables_str:
-        return datasets
-
-    table_list = [t.strip() for t in tables_str.split(",")]
-    for table_full_name in table_list:
-        try:
-            schema, table = table_full_name.split(".")
-            # Spark Job의 로직 반영: 소문자 변환 및 _bronze 스키마 적용
-            target_schema = f"{schema.lower()}_bronze"
-            target_table = table.lower()
-
-            # DataHub Dataset 이름은 전체 경로(Catalog 포함)를 사용하는 것이 안전함
-            dataset_name = f"{catalog}.{target_schema}.{target_table}"
-
-            # Dataset(platform, name, env)
-            datasets.append(Dataset("iceberg", dataset_name, "PROD"))
-        except ValueError:
-            continue
-
-    return datasets
+# def generate_outlets(tables_str, catalog):
+#     """
+#     입력된 테이블 문자열을 파싱하여 DataHub Dataset 객체 리스트를 반환합니다.
+#     Spark Job 로직(glue_mysql_to_iceberg.py)에 따라 대상 테이블 이름을 변환합니다.
+#     변환 규칙: {catalog}.{schema}_bronze.{table} (소문자 변환)
+#     """
+#     datasets = []
+#     if not tables_str:
+#         return datasets
+#
+#     table_list = [t.strip() for t in tables_str.split(",")]
+#     for table_full_name in table_list:
+#         try:
+#             schema, table = table_full_name.split(".")
+#             # Spark Job의 로직 반영: 소문자 변환 및 _bronze 스키마 적용
+#             target_schema = f"{schema.lower()}_bronze"
+#             target_table = table.lower()
+#
+#             # DataHub Dataset 이름은 전체 경로(Catalog 포함)를 사용하는 것이 안전함
+#             dataset_name = f"{catalog}.{target_schema}.{target_table}"
+#
+#             # Dataset(platform, name, env)
+#             datasets.append(Dataset("iceberg", dataset_name, "PROD"))
+#         except ValueError:
+#             continue
+#
+#     return datasets
 
 
 # Outlets 생성
-outlets = generate_outlets(TARGET_TABLES_STR, CATALOG_NAME)
+# outlets = generate_outlets(TARGET_TABLES_STR, CATALOG_NAME)
 
 default_args = {
     "owner": "airflow",

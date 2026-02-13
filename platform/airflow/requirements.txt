@@ -6,4 +6,4 @@ boto3
 apache-airflow-providers-apache-spark==5.5.0
 apache-airflow-providers-slack
 apache-airflow-providers-openlineage
-acryl-datahub-airflow-plugin>=1.1.0.4
+# acryl-datahub-airflow-plugin>=1.1.0.4
