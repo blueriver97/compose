@@ -1,9 +1,14 @@
 {
   "AWS_ACCESS_KEY_ID": "",
-  "AWS_PROFILE": "dev",
+  "AWS_PROFILE": "",
   "AWS_SECRET_ACCESS_KEY": "",
   "BOOTSTRAP_SERVERS": "broker:19092",
-  "CATALOG": "glue_catalog",
+  "CATALOG": "polaris",
+  "DATAHUB_GMS_URL": "http://datahub.svc.internal:8080",
+  "DATAHUB_TOKEN": {
+    "description": "DATAHUB PAT",
+    "value": ""
+  },
   "HADOOP_CONF_DIR": "/opt/hadoop/etc/hadoop",
   "ICEBERG_S3_ROOT_PATH": "s3a://datalake/iceberg",
   "PYSPARK_PYTHON": "./environment/bin/python",
