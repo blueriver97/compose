@@ -1,4 +1,7 @@
 faker
+PyYAML
 numpy
 pyodbc
+pydantic
+pydantic_settings
 mysql-connector-python
