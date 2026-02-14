@@ -2,6 +2,9 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.models import Variable
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.datasets import Dataset
+
+# from airflow.sdk import Asset # noqa
 
 # DAG ID
 DAG_ID = "lineage_airflow_to_spark_dag"
@@ -50,6 +53,14 @@ SPARK_CONF = {
     "spark.yarn.appMasterEnv.AWS_PROFILE": AWS_PROFILE,
     "spark.executorEnv.AWS_PROFILE": AWS_PROFILE,
 
+    # Glue Catalog 설정
+    f"spark.sql.catalog.{CATALOG_NAME}": "org.apache.iceberg.spark.SparkCatalog",
+    f"spark.sql.catalog.{CATALOG_NAME}.catalog-impl": "org.apache.iceberg.aws.glue.GlueCatalog",
+    f"spark.sql.catalog.{CATALOG_NAME}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
+    f"spark.sql.catalog.{CATALOG_NAME}.warehouse": ICEBERG_S3_ROOT_PATH,
+    "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
+    "spark.hadoop.fs.s3a.aws.credentials.provider": "software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider",
+
     # OpenLineage Spark Listener 설정
     "spark.extraListeners": "io.openlineage.spark.agent.OpenLineageSparkListener",
     # OpenLineage Transport 설정
@@ -60,40 +71,41 @@ SPARK_CONF = {
     "spark.openlineage.transport.auth.apiKey": DATAHUB_TOKEN,
     "spark.openlineage.appName": "spark.production_cluster.glue_mysql_to_iceberg",
     "spark.openlineage.namespace": "production_cluster",
-    "spark.openlineage.parentJobNamespace": "production_cluster"
 }
 
-# def generate_outlets(tables_str, catalog):
-#     """
-#     입력된 테이블 문자열을 파싱하여 DataHub Dataset 객체 리스트를 반환합니다.
-#     Spark Job 로직(glue_mysql_to_iceberg.py)에 따라 대상 테이블 이름을 변환합니다.
-#     변환 규칙: {catalog}.{schema}_bronze.{table} (소문자 변환)
-#     """
-#     datasets = []
-#     if not tables_str:
-#         return datasets
-#
-#     table_list = [t.strip() for t in tables_str.split(",")]
-#     for table_full_name in table_list:
-#         try:
-#             schema, table = table_full_name.split(".")
-#             # Spark Job의 로직 반영: 소문자 변환 및 _bronze 스키마 적용
-#             target_schema = f"{schema.lower()}_bronze"
-#             target_table = table.lower()
-#
-#             # DataHub Dataset 이름은 전체 경로(Catalog 포함)를 사용하는 것이 안전함
-#             dataset_name = f"{catalog}.{target_schema}.{target_table}"
-#
-#             # Dataset(platform, name, env)
-#             datasets.append(Dataset("iceberg", dataset_name, "PROD"))
-#         except ValueError:
-#             continue
-#
-#     return datasets
+
+def generate_outlets(tables_str, catalog):
+    """
+    입력된 테이블 문자열을 파싱하여 DataHub Dataset 객체 리스트를 반환합니다.
+    Spark Job 로직(glue_mysql_to_iceberg.py)에 따라 대상 테이블 이름을 변환합니다.
+    변환 규칙: {catalog}.{schema}_bronze.{table} (소문자 변환)
+    """
+    datasets = []
+    if not tables_str:
+        return datasets
+
+    table_list = [t.strip() for t in tables_str.split(",")]
+    for table_full_name in table_list:
+        try:
+            schema, table = table_full_name.split(".")
+            # Spark Job의 로직 반영: 소문자 변환 및 _bronze 스키마 적용
+            target_schema = f"{schema.lower()}_bronze"
+            target_table = table.lower()
+
+            # DataHub Dataset 이름은 전체 경로(Catalog 포함)를 사용하는 것이 안전함
+            dataset_name = f"{catalog}.{target_schema}.{target_table}"
+            dataset_uri = f"iceberg://{catalog}.{target_schema}.{target_table}"
+
+            # Dataset(platform, name, env)
+            datasets.append(Dataset(dataset_name, dataset_uri))
+        except ValueError:
+            continue
+
+    return datasets
 
 
 # Outlets 생성
-# outlets = generate_outlets(TARGET_TABLES_STR, CATALOG_NAME)
+outlets = generate_outlets(TARGET_TABLES_STR, CATALOG_NAME)
 
 default_args = {
     "owner": "airflow",
@@ -123,7 +135,7 @@ with DAG(
         py_files="/opt/airflow/src/utils.zip",
         conf=SPARK_CONF,
         env_vars=ENV_VARS,
-        # outlets=outlets,
+        outlets=outlets,
         openlineage_inject_parent_job_info=True,
-        openlineage_inject_transport_info=True,
+        openlineage_inject_transport_info=False,
     )
