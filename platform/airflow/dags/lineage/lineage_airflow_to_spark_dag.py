@@ -51,22 +51,18 @@ SPARK_CONF = {
     "spark.executorEnv.AWS_PROFILE": AWS_PROFILE,
 
     # OpenLineage Spark Listener 설정
-    "spark.jars.packages": "io.openlineage:openlineage-spark_2.13:1.43.0",
     "spark.extraListeners": "io.openlineage.spark.agent.OpenLineageSparkListener",
-
-
+    # OpenLineage Transport 설정
     "spark.openlineage.transport.type": "http",
     "spark.openlineage.transport.url": DATAHUB_GMS_URL,
     "spark.openlineage.transport.endpoint": "/openapi/openlineage/api/v1/lineage",
     "spark.openlineage.transport.auth.type": "api_key",
     "spark.openlineage.transport.auth.apiKey": DATAHUB_TOKEN,
-
+    "spark.openlineage.appName": "spark.production_cluster.glue_mysql_to_iceberg",
     "spark.openlineage.namespace": "production_cluster",
     "spark.openlineage.parentJobNamespace": "production_cluster"
 }
 
-
-# 2. Outlets 생성을 위한 헬퍼 함수
 # def generate_outlets(tables_str, catalog):
 #     """
 #     입력된 테이블 문자열을 파싱하여 DataHub Dataset 객체 리스트를 반환합니다.
@@ -123,7 +119,7 @@ with DAG(
         spark_binary="/opt/spark/bin/spark-submit",
         name=DAG_ID,
         deploy_mode="cluster",
-        application="/opt/airflow/src/glue_mysql_to_iceberg.py",
+        application="/opt/airflow/src/lineage/glue_mysql_to_iceberg_lineage.py",
         py_files="/opt/airflow/src/utils.zip",
         conf=SPARK_CONF,
         env_vars=ENV_VARS,

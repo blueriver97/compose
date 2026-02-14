@@ -40,9 +40,13 @@ declare -a jar_urls=(
     "https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.30/mysql-connector-java-8.0.30.jar"
     "https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/2.29.52/bundle-2.29.52.jar"
     "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar"
+    # Polaris
     "https://repo1.maven.org/maven2/org/apache/polaris/polaris-spark-3.5_2.13/1.2.0-incubating/polaris-spark-3.5_2.13-1.2.0-incubating.jar"
     "https://repo1.maven.org/maven2/org/apache/polaris/polaris-core/1.2.0-incubating/polaris-core-1.2.0-incubating.jar"
+    # OpenLineage
     "https://repo1.maven.org/maven2/io/openlineage/openlineage-spark_2.13/1.43.0/openlineage-spark_2.13-1.43.0.jar"
+    "https://repo1.maven.org/maven2/org/apache/spark/spark-hive_2.13/${SPARK_VERSION}/spark-hive_2.13-${SPARK_VERSION}.jar"
+    "https://repo1.maven.org/maven2/org/apache/hive/hive-exec/${SPARK_VERSION}/hive-exec-${SPARK_VERSION}.jar"
 )
 
 
