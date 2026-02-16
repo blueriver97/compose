@@ -32,7 +32,7 @@ mkdir -p source sink
 declare -a downloaded_files=(
   "debezium-connector-mysql-$DEBEZIUM_VERSION.Final-plugin.tar.gz"
   "debezium-connector-sqlserver-$DEBEZIUM_VERSION.Final-plugin.tar.gz"
-  "confluentinc-kafka-connect-s3-11.0.2.zip"
+  "confluentinc-kafka-connect-s3-12.0.1.zip"
   "iceberg-kafka-connect-runtime-$ICEBERG_VERSION.zip"
   "debezium-scripting-$DEBEZIUM_VERSION.Final.tar.gz"
   "groovy-$GROOVY_VERSION.jar"
