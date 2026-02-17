@@ -46,7 +46,7 @@ class YamlConfigSettingsSource(PydanticBaseSettingsSource):
 
 
 class DatagenConfig(BaseSettings):
-    database: DatabaseConfig
+    database: dict[str, DatabaseConfig]
     generate: GenerateConfig
     tables: list[str]
 
@@ -61,6 +61,13 @@ class DatagenConfig(BaseSettings):
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
         return (
             init_settings,
-            env_settings,
             YamlConfigSettingsSource(settings_cls),
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
         )
+
+
+# if __name__ == "__main__":
+#     config = DatagenConfig()
+#     print(config)

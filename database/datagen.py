@@ -67,7 +67,7 @@ class MySQLDataGenerator:
         self.config = config
         self.fake = Faker()
         # DB 연결 설정
-        self.db_config = self.config.database
+        self.db_config = self.config.database["mysql"]
         self.conn: Optional[MySQLConnection] = None
 
         # random.Generator

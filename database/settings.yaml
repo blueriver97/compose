@@ -1,10 +1,18 @@
 database:
-  host: "mysql.svc.internal"
-  port: 3306 # 1433
-  user: "root"
-  password: "mysql"
-  database: "store"
-  autocommit: false
+  mysql:
+    host: "mysql.svc.internal"
+    port: 3306
+    user: "root"
+    password: "mysql"
+    database: "store"
+    autocommit: false
+  sqlserver:
+    host: "sqlserver.svc.internal"
+    port: 1433
+    user: "SA"
+    password: "foqaktmxj01!"
+    database: "store"
+    autocommit: false
 
 generate:
   duration: 1 # duration in seconds

@@ -6,7 +6,7 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_AGENT_ENABLED: "true"
-      MSSQL_SA_PASSWORD: __SA_PASSWORD__
+      MSSQL_SA_PASSWORD: foqaktmxj01!
       TZ: "Asia/Seoul"
     networks:
       - default

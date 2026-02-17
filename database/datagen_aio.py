@@ -94,12 +94,13 @@ class AsyncMySQLDataGenerator:
     async def setup(self):
         """DB Connection Pool 생성"""
         try:
+            db_config = self.config.database["mysql"]
             self.pool = await aiomysql.create_pool(
-                host=self.config.database.host,
-                port=self.config.database.port,
-                user=self.config.database.user,
-                password=self.config.database.password,
-                db=self.config.database.database,
+                host=db_config.host,
+                port=db_config.port,
+                user=db_config.user,
+                password=db_config.password,
+                db=db_config.database,
                 autocommit=False,  # 트랜잭션 수동 제어
                 minsize=1,
                 maxsize=10  # 필요에 따라 조절

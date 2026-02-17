@@ -49,7 +49,7 @@ class SQLServerDataGenerator:
     def __init__(self, config: DatagenConfig):
         self.config = config
         self.fake = Faker()
-        self.db_config = self.config.database
+        self.db_config = self.config.database["sqlserver"]
         self.conn: Optional[Connection] = None
 
         # random.Generator
