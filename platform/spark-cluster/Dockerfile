@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------
 # 1. Builder Stage: 의존성 다운로드 및 빌드
 # ----------------------------------------------------------------
-FROM blueriver97/python:3.11 AS builder
+FROM blueriver97/python:3.12 AS builder
 
 ENV TZ=Asia/Seoul
 ARG ZOOKEEPER_VERSION
@@ -49,7 +49,7 @@ RUN rm -rf \
 # ----------------------------------------------------------------
 # 2. Final Stage: 최종 이미지 생성
 # ----------------------------------------------------------------
-FROM blueriver97/python:3.11
+FROM blueriver97/python:3.12
 
 ARG HADOOP_VERSION
 WORKDIR /opt
