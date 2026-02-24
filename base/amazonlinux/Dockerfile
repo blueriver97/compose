@@ -30,6 +30,7 @@ RUN dnf -y update && \
         htop \
         tar \
         tree \
+        telnet \
         findutils \
         procps-ng \
         hostname \

@@ -101,7 +101,6 @@ export HADOOP_OS_TYPE=${HADOOP_OS_TYPE:-$(uname -s)}
 # such commands.  In most cases, # this should be left empty and
 # let users supply it on the command line.
 #export HADOOP_CLIENT_OPTS=""
-export HADOOP_OPTS="$HADOOP_OPTS --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED"
 
 #
 # A note about classpaths.
@@ -146,7 +145,7 @@ export HADOOP_OPTS="$HADOOP_OPTS --add-opens java.base/java.lang=ALL-UNNAMED --a
 # This is a comma delimited list.  It may NOT be overridden via .hadooprc
 # Entries may be added/removed as needed.
 # export HADOOP_OPTIONAL_TOOLS="hadoop-kafka,hadoop-openstack,hadoop-aliyun,hadoop-azure,hadoop-azure-datalake,hadoop-aws"
-export HADOOP_OPTIONAL_TOOLS="hadoop-kafka,hadoop-aws"
+export HADOOP_OPTIONAL_TOOLS="hadoop-aws"
 
 ###
 # Options for remote shell connectivity

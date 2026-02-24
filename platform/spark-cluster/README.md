@@ -37,15 +37,15 @@ tar -zcvf /opt/spark-libs.tar.gz *
 #### MinIO
 
 ```bash
-hadoop fs -put /opt/spark-libs.tar.gz s3a://datalake/spark/jars/
-hadoop fs -put /opt/pyspark_venv.tar.gz s3a://datalake/spark/venv/
+hadoop fs -put -f /opt/spark-libs.tar.gz s3a://blueriver-datalake/spark/jars/
+hadoop fs -put -f /opt/pyspark_venv.tar.gz s3a://blueriver-datalake/spark/venv/
 ```
 
 #### AWS S3
 
 ```bash
-aws s3 cp /opt/spark-libs.tar.gz s3://datalake/spark/jars/
-aws s3 cp /opt/pyspark_venv.tar.gz s3://datalake/spark/venv/
+aws s3 cp /opt/spark-libs.tar.gz s3://blueriver-datalake/spark/jars/
+aws s3 cp /opt/pyspark_venv.tar.gz s3://blueriver-datalake/spark/venv/
 ```
 
 ## 테스트
