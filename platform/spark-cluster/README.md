@@ -20,7 +20,7 @@ docker exec admin hadoop fs -mkdir -p $S3_BUCKET/spark/jars
 python3 -m venv /opt/pyspark_venv
 source /opt/pyspark_venv/bin/activate
 (pyspark_venv) pip install -U pip setuptools wheel
-(pyspark_venv) pip install pyarrow pandas pydantic-core pydantic pydantic_settings PyMySQL hvac venv-pack confluent-kafka
+(pyspark_venv) pip install pyarrow pandas pydantic_core pydantic pydantic_settings PyMySQL hvac venv-pack confluent-kafka
 (pyspark_venv) pip install boto3 attrs orjson httpx cachetools authlib
 (pyspark_venv) venv-pack -o /opt/pyspark_venv_$ARCH.tar.gz
 ```
