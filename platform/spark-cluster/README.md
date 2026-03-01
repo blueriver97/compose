@@ -22,7 +22,7 @@ source /opt/pyspark_venv/bin/activate
 (pyspark_venv) pip install -U pip setuptools wheel
 (pyspark_venv) pip install pyarrow pandas pydantic-core pydantic pydantic_settings PyMySQL hvac venv-pack confluent-kafka
 (pyspark_venv) pip install boto3 attrs orjson httpx cachetools authlib
-(pyspark_venv) venv-pack -o /opt/pyspark_venv.tar.gz
+(pyspark_venv) venv-pack -o /opt/pyspark_venv_$ARCH.tar.gz
 ```
 
 ### JAR Archive 구성 (컨테이너 내부 실행)
@@ -38,14 +38,14 @@ tar -zcvf /opt/spark-libs.tar.gz *
 
 ```bash
 hadoop fs -put -f /opt/spark-libs.tar.gz s3a://blueriver-datalake/spark/jars/
-hadoop fs -put -f /opt/pyspark_venv.tar.gz s3a://blueriver-datalake/spark/venv/
+hadoop fs -put -f /opt/pyspark_venv_$ARCH.tar.gz s3a://blueriver-datalake/spark/venv/
 ```
 
 #### AWS S3
 
 ```bash
 aws s3 cp /opt/spark-libs.tar.gz s3://blueriver-datalake/spark/jars/
-aws s3 cp /opt/pyspark_venv.tar.gz s3://blueriver-datalake/spark/venv/
+aws s3 cp /opt/pyspark_venv_$ARCH.tar.gz s3://blueriver-datalake/spark/venv/
 ```
 
 ## 테스트

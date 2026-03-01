@@ -14,6 +14,7 @@ sed -i "s#\$YARN_NM_USER_HOME_DIR#$YARN_NM_USER_HOME_DIR#g" /opt/hadoop/etc/hado
 
 echo "INFO: Replace env in spark-defaults.conf ..."
 sed -i "s#\$S3_BUCKET#$S3_BUCKET#g" /opt/spark/conf/spark-defaults.conf
+sed -i "s#\$ARCH#$ARCH#g" /opt/spark/conf/spark-defaults.conf
 
 #echo "INFO: Registering Staging SSL Certificate..."
 #STAGING_CERT_PATH="/tmp/ssl/letsencrypt-stg-root-x1.pem" # 실제 경로에 맞춰 수정 필요
