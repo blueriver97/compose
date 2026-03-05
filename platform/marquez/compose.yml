@@ -17,8 +17,8 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - db-conf:/etc/postgresql
-      - db-init:/docker-entrypoint-initdb.d
+      - ./docker/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./docker/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
       - db-backup:/var/lib/postgresql/data
 
   marquez-search:
@@ -80,7 +80,7 @@ services:
       - "${API_PORT}:${API_PORT}"
       - "${API_ADMIN_PORT}:${API_ADMIN_PORT}"
     volumes:
-      - data:/opt/marquez
+      - ./docker/wait-for-it.sh:/opt/marquez/wait-for-it.sh
 
   marquez-web:
     image: "marquezproject/marquez-web:${TAG}"
