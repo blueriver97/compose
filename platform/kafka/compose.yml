@@ -114,6 +114,8 @@ services:
       schema-registry:
         condition: service_started
         required: true
+    extra_hosts:
+      - "datahub.svc.internal:host-gateway"
     restart: always
     networks:
       - default
@@ -121,6 +123,7 @@ services:
       - 18083:8083
     volumes:
       - ./connect-plugins/source:/usr/local/share/kafka/plugins
+      - ./openlineage:/usr/local/share/kafka/openlineage
       - $HOME/.aws:/home/appuser/.aws
 
   sink-connect:
@@ -161,6 +164,7 @@ services:
       - 28083:8083
     volumes:
       - ./connect-plugins/sink:/usr/local/share/kafka/plugins
+      - ./openlineage:/usr/local/share/kafka/openlineage
       - $HOME/.aws:/home/appuser/.aws
 
   kafbat-ui:

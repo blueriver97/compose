@@ -32,6 +32,7 @@ mkdir -p source sink
 declare -a downloaded_files=(
   "debezium-connector-mysql-$DEBEZIUM_VERSION.Final-plugin.tar.gz"
   "debezium-connector-sqlserver-$DEBEZIUM_VERSION.Final-plugin.tar.gz"
+  "debezium-openlineage-core-$DEBEZIUM_VERSION.Final-libs.tar.gz"
   "confluentinc-kafka-connect-s3-12.0.1.zip"
   "iceberg-kafka-connect-runtime-$ICEBERG_VERSION.zip"
   "debezium-scripting-$DEBEZIUM_VERSION.Final.tar.gz"
@@ -63,6 +64,18 @@ for file in "${downloaded_files[@]}"; do
             cp ./source/debezium-scripting/*.jar ./source/debezium-connector-sqlserver/
 
             rm -rf ./source/debezium-scripting
+            ;;
+
+        *debezium-openlineage-core*)
+            # Debezium scripting library
+            echo "Extracting Source Plugin: $file -> to source/"
+            tar -xzf "$file" -C ./source/
+            rm -rf ./source/debezium-openlineage-core/jackson-datatype-jdk8*.jar
+            cp ./jackson-*.jar ./source/debezium-openlineage-core/
+            cp ./source/debezium-openlineage-core/*.jar ./source/debezium-connector-mysql/
+            cp ./source/debezium-openlineage-core/*.jar ./source/debezium-connector-sqlserver/
+
+            rm -rf ./source/debezium-openlineage-core
             ;;
 
         *groovy*)

@@ -1,0 +1,111 @@
+services:
+  marquez-db:
+    image: postgres:14
+    container_name: marquez-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      #      - POSTGRES_DB=marquez
+      - MARQUEZ_USER=marquez
+      - MARQUEZ_PASSWORD=marquez
+      - MARQUEZ_DB=marquez
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    # Enables SQL statement logging (see: https://www.postgresql.org/docs/12/runtime-config-logging.html#GUC-LOG-STATEMENT)
+    # command: ["postgres", "-c", "log_statement=all"]
+    networks:
+      - default
+    ports:
+      - 5432:5432
+    volumes:
+      - db-conf:/etc/postgresql
+      - db-init:/docker-entrypoint-initdb.d
+      - db-backup:/var/lib/postgresql/data
+
+  marquez-search:
+    image: opensearchproject/opensearch:2.5.0
+    container_name: marquez-search
+    hostname: opensearch
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch
+      - discovery.seed_hosts=opensearch
+      - discovery.type=single-node
+      - cluster.initial_cluster_manager_nodes=opensearch
+      - bootstrap.memory_lock=true
+      - plugins.security.ssl.http.enabled=false
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
+      - OPENSEARCH_PASSWORD=admin
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - default
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+
+  marquez-api:
+    image: "marquezproject/marquez:${TAG}"
+    # platform: linux/amd64
+    container_name: marquez-api
+    environment:
+      - MARQUEZ_PORT=${API_PORT}
+      - MARQUEZ_ADMIN_PORT=${API_ADMIN_PORT}
+      - POSTGRES_HOST=marquez-db
+      - SEARCH_ENABLED=${SEARCH_ENABLED}
+    depends_on:
+      - marquez-db
+      - marquez-search
+    entrypoint:
+      [
+        "/opt/marquez/wait-for-it.sh",
+        "marquez-db:5432",
+        "--",
+        "/opt/marquez/wait-for-it.sh",
+        "marquez-search:9200",
+        "--",
+        "./entrypoint.sh",
+      ]
+    networks:
+      - default
+    ports:
+      - "${API_PORT}:${API_PORT}"
+      - "${API_ADMIN_PORT}:${API_ADMIN_PORT}"
+    volumes:
+      - data:/opt/marquez
+
+  marquez-web:
+    image: "marquezproject/marquez-web:${TAG}"
+    # platform: linux/amd64
+    container_name: marquez-web
+    environment:
+      - MARQUEZ_HOST=marquez-api
+      - MARQUEZ_PORT=${API_PORT}
+      - WEB_PORT=${WEB_PORT}
+      - REACT_APP_ADVANCED_SEARCH=${SEARCH_ENABLED}
+    networks:
+      - default
+    ports:
+      - "${WEB_PORT}:${WEB_PORT}"
+    depends_on:
+      - marquez-api
+
+networks:
+  default:
+    driver: bridge
+    name: service-network
+
+volumes:
+  data:
+  db-conf:
+  db-init:
+  db-backup:
+  opensearch-data:

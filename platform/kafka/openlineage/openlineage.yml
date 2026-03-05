@@ -1,0 +1,7 @@
+transport:
+  type: http
+  url: http://datahub.svc.internal:8082
+  endpoint: /openapi/openlineage/api/v1/lineage
+  auth:
+    type: api_key
+    apiKey: eyJhbGciOiJIUzI1NiJ9.eyJhY3RvclR5cGUiOiJVU0VSIiwiYWN0b3JJZCI6ImRhdGFodWIiLCJ0eXBlIjoiUEVSU09OQUwiLCJ2ZXJzaW9uIjoiMiIsImp0aSI6IjFjMWJmNTkzLTI1MWItNGYzMi1hNjJjLWZiYzViNDU3NGMxMyIsInN1YiI6ImRhdGFodWIiLCJpc3MiOiJkYXRhaHViLW1ldGFkYXRhLXNlcnZpY2UifQ.3MCpefBKmio52XMPCoF8CUDcv4xzjS73cwmViGPS6s8

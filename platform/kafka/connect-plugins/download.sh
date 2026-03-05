@@ -24,6 +24,12 @@ declare -a jar_urls=(
   "https://repo1.maven.org/maven2/org/apache/groovy/groovy/$GROOVY_VERSION/groovy-$GROOVY_VERSION.jar"
   "https://repo1.maven.org/maven2/org/apache/groovy/groovy-jsr223/$GROOVY_VERSION/groovy-jsr223-$GROOVY_VERSION.jar"
   "https://repo1.maven.org/maven2/org/apache/groovy/groovy-json/$GROOVY_VERSION/groovy-json-$GROOVY_VERSION.jar"
+  # Openlineage for Debezium
+  "https://repo1.maven.org/maven2/io/debezium/debezium-openlineage-core/$DEBEZIUM_VERSION.Final/debezium-openlineage-core-$DEBEZIUM_VERSION.Final-libs.tar.gz"
+  "https://repo1.maven.org/maven2/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.19.0/jackson-datatype-jdk8-2.19.0.jar"
+  "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.19.0/jackson-annotations-2.19.0.jar"
+  "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.19.0/jackson-core-2.19.0.jar"
+  "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.19.0/jackson-databind-2.19.0.jar"
   # For Sink
   "https://github.com/blueriver97/artifacts/releases/download/iceberg-kafka-connect-runtime/iceberg-kafka-connect-runtime-$ICEBERG_VERSION.zip"
   "https://hub-downloads.confluent.io/api/plugins/confluentinc/kafka-connect-s3/versions/12.0.1/confluentinc-kafka-connect-s3-12.0.1.zip"
