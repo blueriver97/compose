@@ -1,8 +1,6 @@
 x-extra-hosts: &extra-hosts
   extra_hosts:
     - "host.docker.internal:host-gateway"
-    - "kafka.svc.internal:broker"
-    - "schema-registry.svc.internal:schema-registry"
 
 services:
   controller:
