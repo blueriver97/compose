@@ -6,12 +6,12 @@ transport:
     type: api_key
     apiKey:
 
+#transport:
 #  type: kafka
-#  topicName: openlineage-events
-#  localServerId: my-application-id
+#  topicName: openlineage.events
+#  messageKey: debezium
 #  properties:
 #    bootstrap.servers: broker:19092
-#    security.protocol: PLAINTEXT
-#    client.id: openlineage-producer
+#    key.serializer: org.apache.kafka.common.serialization.StringSerializer
+#    value.serializer: org.apache.kafka.common.serialization.StringSerializer
 #    acks: all
-#    retries: 3
