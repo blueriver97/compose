@@ -1,17 +1,26 @@
-transport:
-  type: http
-  url: http://datahub.svc.internal:8080
-  endpoint: /openapi/openlineage/api/v1/lineage
-  auth:
-    type: api_key
-    apiKey:
-
 #transport:
-#  type: kafka
-#  topicName: openlineage.events
-#  messageKey: debezium
-#  properties:
-#    bootstrap.servers: broker:19092
-#    key.serializer: org.apache.kafka.common.serialization.StringSerializer
-#    value.serializer: org.apache.kafka.common.serialization.StringSerializer
-#    acks: all
+#  type: http
+#  url: http://datahub.svc.internal:8080
+#  endpoint: /openapi/openlineage/api/v1/lineage
+#  auth:
+#    type: api_key
+#    apiKey:
+
+transport:
+  type: kafka
+  topicName: openlineage.events
+
+  properties:
+    bootstrap.servers: broker:19092
+
+    # 1. Schema Registry 접속 정보 추가
+    #schema.registry.url: http://schema-registry:8081
+
+    # 2. Key/Value Serializer 교체
+    key.serializer: org.apache.kafka.common.serialization.StringSerializer
+    # JSON Schema를 사용할 경우 아래 Serializer 사용
+    value.serializer: org.apache.kafka.common.serialization.StringSerializer
+
+    # 3. 추가적인 안정성/성능 설정 (권장)
+    acks: all
+    retries: 3
