@@ -196,7 +196,13 @@ export HADOOP_LOG_DIR=/var/log/yarn
 # export HADOOP_STOP_TIMEOUT=5
 
 # Where pid files are stored.  /tmp by default.
-# export HADOOP_PID_DIR=/tmp
+export HADOOP_PID_DIR=/opt/hadoop/pids
+
+# Check if directories exist before starting
+if [ ! -d "$HADOOP_PID_DIR" ]; then
+  mkdir -p "$HADOOP_PID_DIR"
+  echo "Created PID directory: $HADOOP_PID_DIR"
+fi
 
 # Default log4j setting for interactive commands
 # Java property: hadoop.root.logger
